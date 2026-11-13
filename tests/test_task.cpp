@@ -79,3 +79,10 @@ TEST_CASE("Task handles exceptions in Task::run and rapid co_await completion ra
     };
     REQUIRE(race_coro().result() == 100);
 }
+
+TEST_CASE("Task await_suspend returns false if completed concurrently after await_ready", "[task][race]") {
+    auto t = []() -> Task<int> { co_return 1; }();
+    REQUIRE(t.result() == 1);
+
+    REQUIRE_FALSE(t.await_suspend(std::noop_coroutine()));
+}

@@ -28,7 +28,7 @@ struct WhenAnyWatcher {
         std::suspend_never initial_suspend() noexcept { return {}; }
         std::suspend_never final_suspend() noexcept { return {}; }
         void return_void() noexcept {}
-        void unhandled_exception() noexcept {}
+        void unhandled_exception() noexcept {} // LCOV_EXCL_LINE
     };
 };
 

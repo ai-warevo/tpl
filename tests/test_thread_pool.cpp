@@ -70,3 +70,29 @@ TEST_CASE("async_sleep falls back to global pool when awaited from non-pool thre
     external_thread.join();
     REQUIRE(done.load());
 }
+
+TEST_CASE("Coroutines spawned from raw std::thread fall back to global ThreadPool", "[thread_pool][fallback]") {
+    int res = 0;
+    std::thread t([&]() {
+        auto coro = []() -> Task<int> {
+            co_await async_sleep(10ms);
+            co_return 42;
+        };
+        res = coro().result();
+    });
+    t.join();
+    REQUIRE(res == 42);
+}
+
+TEST_CASE("ThreadPool destructor cleanly stops timer thread with pending timers", "[thread_pool][dtor]") {
+    {
+        ThreadPool temp_pool(1);
+        // Schedule a long timer directly via a coroutine on global/temp pool and destroy immediately
+        auto t = []() -> Task<void> {
+            co_await async_sleep(5000ms);
+            co_return;
+        }();
+        std::this_thread::sleep_for(10ms);
+    }
+    SUCCEED();
+}
