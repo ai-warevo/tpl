@@ -80,10 +80,11 @@ TEST_CASE("when_any handles winning Task<void> and concurrent completion races",
     }
 }
 
-TEST_CASE("WhenAnyAwaiter await_suspend returns false when already completed", "[when_any][race]") {
+TEST_CASE("WhenAnyAwaiter await_suspend returns caller handle when already completed", "[when_any][race]") {
     auto state = std::make_shared<detail::WhenAnyState>();
     state->completed.store(true, std::memory_order_release);
 
     detail::WhenAnyAwaiter awaiter{state};
-    REQUIRE_FALSE(awaiter.await_suspend(std::noop_coroutine()));
+    auto caller = std::noop_coroutine();
+    REQUIRE(awaiter.await_suspend(caller) == caller);
 }

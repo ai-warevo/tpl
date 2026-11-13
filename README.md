@@ -5,7 +5,7 @@
 <br />
 [![CI](https://github.com/ai-warevo/tpl/actions/workflows/ci.yml/badge.svg)](https://github.com/ai-warevo/tpl/actions/workflows/ci.yml)
 <br />
-[![Tests & Coverage](https://github.com/ai-warevo/tpl/actions/workflows/test.yml/badge.svg)](https://github.com/ai-warevo/tpl/actions/workflows/test.yml)
+[![Tests](https://github.com/ai-warevo/tpl/actions/workflows/test.yml/badge.svg)](https://github.com/ai-warevo/tpl/actions/workflows/test.yml)
 [![Coverage](https://raw.githubusercontent.com/ai-warevo/tpl/refs/heads/badges/coverage.svg)](https://ai-warevo.github.io/tpl)
 
 > **C# Task Parallel Library (TPL) ergonomics brought to modern C++20 coroutines.**  

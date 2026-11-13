@@ -64,13 +64,13 @@ struct WhenAnyAwaiter {
         return state->completed.load(std::memory_order_acquire);
     }
 
-    bool await_suspend(std::coroutine_handle<> h) noexcept {
+    std::coroutine_handle<> await_suspend(std::coroutine_handle<> h) noexcept {
         std::lock_guard lock(state->mtx);
         if (state->completed.load(std::memory_order_acquire)) {
-            return false;
+            return h;
         }
         state->waiter = h;
-        return true;
+        return std::noop_coroutine();
     }
 
     size_t await_resume() const noexcept {

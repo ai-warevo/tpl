@@ -176,12 +176,16 @@ public:
     }
 
     /**
-     * @brief Suspends the caller until this task finishes, unless it completed concurrently.
+     * @brief Suspends the caller until this task finishes using C++20 symmetric transfer,
+     *        or immediately resumes @p awaiting if the task completed concurrently.
      * @param[in] awaiting Handle of the coroutine executing @c co_await.
-     * @return True if the caller remains suspended; false to resume immediately.
+     * @return @p awaiting if already ready; @c std::noop_coroutine() if suspended.
      */
-    bool await_suspend(std::coroutine_handle<> awaiting) {
-        return state_->try_attach_continuation(awaiting);
+    std::coroutine_handle<> await_suspend(std::coroutine_handle<> awaiting) noexcept {
+        if (!state_->try_attach_continuation(awaiting)) {
+            return awaiting;
+        }
+        return std::noop_coroutine();
     }
 
     /**
