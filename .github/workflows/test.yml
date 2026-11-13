@@ -40,9 +40,11 @@ jobs:
       - name: Generate Coverage Reports (XML & HTML)
         run: |
           mkdir -p htmlcov
-          gcovr -r . \
+          gcovr -r build/ \
+            --gcov-ignore-errors=no_working_dir_found \
             --filter "include/aw/tpl/" \
             --filter "src/" \
+            --exclude "build/_deps/*" \
             --exclude-unreachable-branches \
             --exclude-throw-branches \
             --print-summary \
@@ -56,12 +58,12 @@ jobs:
           PERCENTAGE=$(python3 -c "import xml.etree.ElementTree as ET; tree = ET.parse('coverage.xml'); root = tree.getroot(); print(int(float(root.attrib['line-rate']) * 100))")
           echo "DEBUG: Extracted percentage: '$PERCENTAGE'"
 
-          if [ "$PERCENTAGE" -lt 50 ]; then 
-            COLOR="#e05d44" 
-          elif [ "$PERCENTAGE" -lt 80 ]; then 
-            COLOR="#dfb317" 
-          else 
-            COLOR="#44cc11" 
+          if [ "$PERCENTAGE" -lt 50 ]; then
+            COLOR="#e05d44"
+          elif [ "$PERCENTAGE" -lt 80 ]; then
+            COLOR="#dfb317"
+          else
+            COLOR="#44cc11"
           fi
 
           echo "percent=${PERCENTAGE}%" >> $GITHUB_OUTPUT

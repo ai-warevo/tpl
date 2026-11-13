@@ -142,7 +142,7 @@ endif()
 option(AW_TPL_ENABLE_COVERAGE "Enable code coverage instrumentation" OFF)
 
 if(AW_TPL_ENABLE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-    target_compile_options(aw_tpl PUBLIC --coverage -O0 -g)
+    target_compile_options(aw_tpl PUBLIC --coverage -O0 -g -fprofile-update=atomic)
     target_link_options(aw_tpl PUBLIC --coverage)
 endif()
 
