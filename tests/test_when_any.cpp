@@ -2,6 +2,7 @@
 #include <aw/tpl/when_any.hpp>
 
 #include <chrono>
+#include <thread>
 #include <memory>
 #include <stdexcept>
 #include <vector>
@@ -9,6 +10,21 @@
 using namespace std::chrono_literals;
 using namespace aw::tpl;
 using namespace aw::tpl::threading::tasks;
+
+namespace {
+
+// Polls `pred` every millisecond until it holds or `timeout` elapses.
+template <typename Pred>
+bool wait_until(Pred pred, std::chrono::milliseconds timeout = 5000ms) {
+    const auto deadline = std::chrono::steady_clock::now() + timeout;
+    while (!pred()) {
+        if (std::chrono::steady_clock::now() > deadline) return false;
+        std::this_thread::sleep_for(1ms);
+    }
+    return true;
+}
+
+} // namespace
 
 TEST_CASE("when_any throws on empty vector", "[when_any][exceptions]") {
     std::vector<Task<int>> empty;
@@ -26,7 +42,7 @@ TEST_CASE("when_any on vector returns first completed task including fast path",
 
     // 2. Fast path: task already finished before when_any suspends
     auto instant = []() -> Task<int> { co_return 555; }();
-    std::this_thread::sleep_for(25ms);
+    REQUIRE(wait_until([&] { return instant.await_ready(); }));
 
     std::vector<Task<int>> pre_completed;
     pre_completed.push_back(instant);
@@ -111,4 +127,9 @@ TEST_CASE("when_any does not consume a move-only result of the winner", "[when_a
     auto p = winner.result();
     REQUIRE(p != nullptr);
     REQUIRE(*p == 42);
+}
+
+TEST_CASE("WhenAnyAwaiter::await_suspend is not noexcept", "[when_any][noexcept]") {
+    static_assert(!noexcept(std::declval<detail::WhenAnyAwaiter&>().await_suspend(std::noop_coroutine())));
+    SUCCEED();
 }

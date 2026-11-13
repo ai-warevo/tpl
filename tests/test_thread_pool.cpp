@@ -3,11 +3,33 @@
 
 #include <atomic>
 #include <chrono>
+#include <thread>
 #include <vector>
 
 using namespace std::chrono_literals;
 using namespace aw::tpl;
 using namespace aw::tpl::threading::tasks;
+
+namespace {
+
+struct CurrentPoolGuard {
+    ThreadPool* previous;
+    explicit CurrentPoolGuard(ThreadPool* p) : previous(detail::current_pool) { detail::current_pool = p; }
+    ~CurrentPoolGuard() { detail::current_pool = previous; }
+};
+
+// Polls `pred` every millisecond until it holds or `timeout` elapses.
+template <typename Pred>
+bool wait_until(Pred pred, std::chrono::milliseconds timeout = 5000ms) {
+    const auto deadline = std::chrono::steady_clock::now() + timeout;
+    while (!pred()) {
+        if (std::chrono::steady_clock::now() > deadline) return false;
+        std::this_thread::sleep_for(1ms);
+    }
+    return true;
+}
+
+} // namespace
 
 TEST_CASE("ThreadPool handles zero thread count fallback and explicit sizing", "[thread_pool]") {
     ThreadPool::set_default_threads(0); // Should be ignored
@@ -57,6 +79,7 @@ TEST_CASE("ThreadPool global singleton respects configured thread count", "[thre
 
 TEST_CASE("async_sleep falls back to global pool when awaited from non-pool thread", "[thread_pool][fallback]") {
     std::atomic<bool> done{false};
+    int result = 0;
 
     // Call from a raw std::thread where detail::current_pool is nullptr
     std::thread external_thread([&]() {
@@ -64,12 +87,13 @@ TEST_CASE("async_sleep falls back to global pool when awaited from non-pool thre
             co_await async_sleep(15ms);
             co_return 123;
         };
-        REQUIRE(sleeper().result() == 123);
+        result = sleeper().result();
         done.store(true);
     });
 
     external_thread.join();
     REQUIRE(done.load());
+    REQUIRE(result == 123);
 }
 
 TEST_CASE("Coroutines spawned from raw std::thread fall back to global ThreadPool", "[thread_pool][fallback]") {
@@ -86,28 +110,29 @@ TEST_CASE("Coroutines spawned from raw std::thread fall back to global ThreadPoo
 }
 
 TEST_CASE("ThreadPool destructor cleanly stops timer thread with pending timers", "[thread_pool][dtor]") {
+    Task<void> t;
     {
         ThreadPool temp_pool(1);
-        // Schedule a long timer directly via a coroutine on global/temp pool and destroy immediately
-        auto t = []() -> Task<void> {
+        CurrentPoolGuard guard(&temp_pool); // make the coroutine really run on temp_pool
+        t = []() -> Task<void> {
             co_await async_sleep(5000ms);
             co_return;
         }();
-        std::this_thread::sleep_for(10ms);
+        std::this_thread::sleep_for(10ms); // give the coroutine time to arm its timer
     }
-    SUCCEED();
+    // Destruction resumed the pending timer immediately.
+    REQUIRE(wait_until([&] { return t.await_ready(); }));
 }
 
 TEST_CASE("ThreadPool destructor interrupts active timer wait_until cleanly", "[thread_pool][dtor]") {
     {
         ThreadPool temp_pool(1);
-        detail::current_pool = &temp_pool;
-
-        // Enqueue a long timer directly onto temp_pool's timer thread
-        auto awaiter = async_sleep(10000ms);
-        awaiter.await_suspend(std::noop_coroutine());
-
-        detail::current_pool = nullptr;
+        {
+            CurrentPoolGuard guard(&temp_pool);
+            // Enqueue a long timer directly onto temp_pool's timer thread
+            auto awaiter = async_sleep(10000ms);
+            awaiter.await_suspend(std::noop_coroutine());
+        }
         std::this_thread::sleep_for(15ms); // Let timer_loop enter wait_until(next_wake)
     } // ~ThreadPool() triggers request_stop() while timer_loop is inside wait_until
     SUCCEED();
@@ -122,9 +147,11 @@ TEST_CASE("ThreadPool destructor cleanly aborts timer_loop during wait_until", "
             co_return;
         };
 
-        detail::current_pool = &temp_pool;
-        auto t = long_sleep();
-        detail::current_pool = nullptr;
+        Task<void> t;
+        {
+            CurrentPoolGuard guard(&temp_pool);
+            t = long_sleep();
+        }
 
         std::this_thread::sleep_for(30ms);
     }
@@ -134,12 +161,6 @@ TEST_CASE("ThreadPool destructor cleanly aborts timer_loop during wait_until", "
 // --- Pool shutdown (tasks 04-06) ---
 
 namespace {
-
-struct CurrentPoolGuard {
-    ThreadPool* previous;
-    explicit CurrentPoolGuard(ThreadPool* p) : previous(detail::current_pool) { detail::current_pool = p; }
-    ~CurrentPoolGuard() { detail::current_pool = previous; }
-};
 
 Task<void> sleep_then_bump(std::chrono::milliseconds d, std::atomic<int>& counter) {
     co_await async_sleep(d);

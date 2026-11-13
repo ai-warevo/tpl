@@ -64,7 +64,7 @@ struct WhenAnyAwaiter {
         return state->completed.load(std::memory_order_acquire);
     }
 
-    std::coroutine_handle<> await_suspend(std::coroutine_handle<> h) noexcept {
+    std::coroutine_handle<> await_suspend(std::coroutine_handle<> h) {
         std::lock_guard lock(state->mtx);
         // Reading winner_index later is race free: it is written before completed is set (see watcher).
         if (state->completed.load(std::memory_order_acquire)) {

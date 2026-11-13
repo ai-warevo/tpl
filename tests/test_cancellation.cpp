@@ -85,7 +85,8 @@ TEST_CASE("Cooperative cancellation with FakeIt mock verification", "[cancellati
     };
 
     auto task = pipeline(cts.token());
-    std::this_thread::sleep_for(25ms);
+    // Cancelling right away is fine: either the sleep is not armed yet (await_ready throws) or the
+    // callback resumes it; both paths end in OperationCanceledException.
     cts.cancel();
 
     REQUIRE_THROWS_AS(task.result(), OperationCanceledException);

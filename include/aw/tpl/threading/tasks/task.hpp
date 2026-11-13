@@ -91,8 +91,9 @@ public:
      *        or immediately resumes @p awaiting if the task completed concurrently.
      * @param[in] awaiting Handle of the coroutine executing @c co_await.
      * @return @p awaiting if already ready; @c std::noop_coroutine() if suspended.
+     * @note Not noexcept: attaching the continuation locks a mutex and may allocate.
      */
-    std::coroutine_handle<> await_suspend(std::coroutine_handle<> awaiting) noexcept {
+    std::coroutine_handle<> await_suspend(std::coroutine_handle<> awaiting) {
         if (!state_) {
             return awaiting; // await_resume() will throw std::logic_error
         }

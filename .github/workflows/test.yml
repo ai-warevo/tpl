@@ -107,3 +107,35 @@ jobs:
         with:
           branch: gh-pages
           folder: htmlcov
+
+  sanitizers:
+    name: Sanitizers (${{ matrix.sanitizer }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        sanitizer: [ address, thread ]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Relax ASLR for ThreadSanitizer
+        if: matrix.sanitizer == 'thread'
+        run: sudo sysctl vm.mmap_rnd_bits=28
+
+      - name: Configure & Build
+        env:
+          CC: gcc
+          CXX: g++
+        run: |
+          cmake -B build \
+            -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+            -DAW_TPL_BUILD_EXAMPLES=OFF \
+            -DAW_TPL_BUILD_TESTS=ON \
+            -DAW_TPL_SANITIZE=${{ matrix.sanitizer }}
+          cmake --build build --parallel
+
+      - name: Run CTest
+        run: ctest --test-dir build --output-on-failure --timeout 120

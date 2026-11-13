@@ -4,6 +4,8 @@
 #include <atomic>
 #include <memory>
 #include <chrono>
+#include <thread>
+#include <tuple>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -12,21 +14,35 @@ using namespace std::chrono_literals;
 using namespace aw::tpl;
 using namespace aw::tpl::threading::tasks;
 
+namespace {
+
+// Polls `pred` every millisecond until it holds or `timeout` elapses.
+template <typename Pred>
+bool wait_until(Pred pred, std::chrono::milliseconds timeout = 5000ms) {
+    const auto deadline = std::chrono::steady_clock::now() + timeout;
+    while (!pred()) {
+        if (std::chrono::steady_clock::now() > deadline) return false;
+        std::this_thread::sleep_for(1ms);
+    }
+    return true;
+}
+
+} // namespace
+
 TEST_CASE("when_all handles heterogeneous tasks including void", "[when_all]") {
-    auto runner = []() -> Task<void> {
-        auto [num, text, unit] = co_await when_all(
+    // The coroutine runs on a pool worker, so all assertions are made on the main thread.
+    auto runner = []() -> Task<std::tuple<int, std::string, std::monostate>> {
+        co_return co_await when_all(
             []() -> Task<int> { co_await async_sleep(20ms); co_return 12; }(),
             []() -> Task<std::string> { co_await async_sleep(10ms); co_return "tpl"; }(),
             []() -> Task<void> { co_await async_sleep(15ms); co_return; }()
         );
-
-        REQUIRE(num == 12);
-        REQUIRE(text == "tpl");
-        REQUIRE(std::is_same_v<decltype(unit), std::monostate>);
-        co_return;
     };
 
-    runner().wait();
+    auto [num, text, unit] = runner().result();
+    REQUIRE(num == 12);
+    REQUIRE(text == "tpl");
+    REQUIRE(std::is_same_v<decltype(unit), std::monostate>);
 }
 
 TEST_CASE("when_all handles vectors of Task<T> and Task<void>", "[when_all][vector]") {
@@ -79,7 +95,7 @@ TEST_CASE("when_all fast-paths already completed tasks", "[when_all][fast]") {
     auto t2 = []() -> Task<void> { co_return; }();
     auto t3 = []() -> Task<void> { co_return; }();
 
-    std::this_thread::sleep_for(25ms);
+    REQUIRE(wait_until([&] { return t1.await_ready() && t2.await_ready() && t3.await_ready(); }));
 
     auto [res, unit] = when_all(t1, t2).result();
     REQUIRE(res == 10);

@@ -44,6 +44,28 @@ if(AW_TPL_ENABLE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     target_link_options(aw_tpl PUBLIC --coverage)
 endif()
 
+# Sanitizer builds (PUBLIC so that tests and consumers are instrumented as well).
+set(AW_TPL_SANITIZE "none" CACHE STRING "Sanitizer to enable: none, address (ASan+UBSan) or thread (TSan)")
+set_property(CACHE AW_TPL_SANITIZE PROPERTY STRINGS none address thread)
+
+if(NOT AW_TPL_SANITIZE STREQUAL "none")
+    if(NOT CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+        message(FATAL_ERROR "AW_TPL_SANITIZE requires GCC or Clang")
+    endif()
+    if(AW_TPL_ENABLE_COVERAGE)
+        message(FATAL_ERROR "AW_TPL_SANITIZE cannot be combined with AW_TPL_ENABLE_COVERAGE")
+    endif()
+    if(AW_TPL_SANITIZE STREQUAL "address")
+        set(AW_TPL_SANITIZE_FLAGS "address,undefined")
+    elseif(AW_TPL_SANITIZE STREQUAL "thread")
+        set(AW_TPL_SANITIZE_FLAGS "thread")
+    else()
+        message(FATAL_ERROR "AW_TPL_SANITIZE must be one of: none, address, thread")
+    endif()
+    target_compile_options(aw_tpl PUBLIC -fsanitize=${AW_TPL_SANITIZE_FLAGS} -fno-omit-frame-pointer -g)
+    target_link_options(aw_tpl PUBLIC -fsanitize=${AW_TPL_SANITIZE_FLAGS})
+endif()
+
 
 # --- Install & Package Export Rules ---
 include(GNUInstallDirs)

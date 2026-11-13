@@ -15,6 +15,21 @@ using namespace std::chrono_literals;
 using namespace aw::tpl;
 using namespace aw::tpl::threading::tasks;
 
+namespace {
+
+// Polls `pred` every millisecond until it holds or `timeout` elapses.
+template <typename Pred>
+bool wait_until(Pred pred, std::chrono::milliseconds timeout = 5000ms) {
+    const auto deadline = std::chrono::steady_clock::now() + timeout;
+    while (!pred()) {
+        if (std::chrono::steady_clock::now() > deadline) return false;
+        std::this_thread::sleep_for(1ms);
+    }
+    return true;
+}
+
+} // namespace
+
 TEST_CASE("Task default construction and already-completed fast paths", "[task]") {
     Task<int> empty_task;
     REQUIRE(empty_task.await_ready());
@@ -24,7 +39,7 @@ TEST_CASE("Task default construction and already-completed fast paths", "[task]"
     };
 
     auto t = fast_coro();
-    std::this_thread::sleep_for(30ms); // Let worker complete task before awaiting
+    REQUIRE(wait_until([&] { return t.await_ready(); })); // let the worker complete the task
     REQUIRE(t.await_ready());
     REQUIRE(t.result() == 77);
 
@@ -308,8 +323,7 @@ TEST_CASE("Second result() of a move-only task throws TaskAlreadyMovedException"
 
 TEST_CASE("Concurrent extraction of a move-only result yields exactly one value", "[task][move][race]") {
     auto t = make_ptr_task(9);
-    (void)t.await_ready();
-    std::this_thread::sleep_for(50ms);
+    REQUIRE(wait_until([&] { return t.await_ready(); }));
 
     std::atomic<int> successes{0};
     std::atomic<int> already_moved{0};
@@ -351,9 +365,49 @@ TEST_CASE("Blocking wait on a pool worker throws instead of deadlocking", "[task
 
 TEST_CASE("result() on an already-ready task works on a worker", "[task][deadlock]") {
     auto inner = []() -> Task<int> { co_return 5; }();
-    for (int i = 0; i < 400 && !inner.await_ready(); ++i) std::this_thread::sleep_for(5ms);
-    REQUIRE(inner.await_ready());
+    REQUIRE(wait_until([&] { return inner.await_ready(); }));
 
     auto outer = [](Task<int> in) -> Task<int> { co_return in.result(); }(inner);
     REQUIRE(outer.result() == 5);
+}
+
+// --- Task 28: Task<>::run coverage ---
+
+namespace {
+
+struct MoveOnlyCallable {
+    std::unique_ptr<int> value;
+    int operator()() { return *value; }
+};
+
+} // namespace
+
+TEST_CASE("Task<>::run covers void, by-value capture and move-only callables", "[task][run]") {
+    // 1. void callable
+    auto flag = std::make_shared<std::atomic<bool>>(false);
+    Task<>::run([flag] { flag->store(true); }).wait();
+    REQUIRE(flag->load());
+
+    // 2. closure created in a scope that ends before the task is consumed
+    Task<std::string> from_scope;
+    {
+        std::string text = "captured by value";
+        from_scope = Task<>::run([text] { return text; });
+    }
+    REQUIRE(from_scope.result() == "captured by value");
+
+    // 3. move-only callable
+    REQUIRE(Task<>::run(MoveOnlyCallable{std::make_unique<int>(31)}).result() == 31);
+
+    // 4. nested run awaited (not blocked on) from inside a coroutine
+    auto outer = []() -> Task<int> {
+        int inner = co_await Task<>::run([] { return 20; });
+        co_return inner + 1;
+    };
+    REQUIRE(outer().result() == 21);
+}
+
+TEST_CASE("Task::await_suspend is not noexcept", "[task][noexcept]") {
+    static_assert(!noexcept(std::declval<Task<int>&>().await_suspend(std::noop_coroutine())));
+    SUCCEED();
 }
