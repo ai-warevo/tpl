@@ -35,10 +35,18 @@ TEST_CASE("when_all handles heterogeneous tasks including void", "[when_all]") {
     // The coroutine runs on a pool worker, so all assertions are made on the main thread.
     auto runner = []() -> Task<std::tuple<int, std::string, std::monostate>> {
         co_return co_await when_all(
-            []() -> Task<int> { co_await async_sleep(20ms); co_return 12; }(),
-            []() -> Task<std::string> { co_await async_sleep(10ms); co_return "tpl"; }(),
-            []() -> Task<void> { co_await async_sleep(15ms); co_return; }()
-        );
+            []() -> Task<int> {
+                co_await async_sleep(20ms);
+                co_return 12;
+            }(),
+            []() -> Task<std::string> {
+                co_await async_sleep(10ms);
+                co_return "tpl";
+            }(),
+            []() -> Task<void> {
+                co_await async_sleep(15ms);
+                co_return;
+            }());
     };
 
     auto [num, text, unit] = runner().result();
@@ -82,7 +90,10 @@ TEST_CASE("when_all handles vectors of Task<T> and Task<void>", "[when_all][vect
 
 TEST_CASE("when_all propagates exceptions from failed child tasks", "[when_all][exceptions]") {
     std::vector<Task<int>> tasks;
-    tasks.push_back([]() -> Task<int> { co_await async_sleep(10ms); co_return 1; }());
+    tasks.push_back([]() -> Task<int> {
+        co_await async_sleep(10ms);
+        co_return 1;
+    }());
     tasks.push_back([]() -> Task<int> {
         co_await async_sleep(20ms);
         throw std::runtime_error("child failed");
@@ -161,14 +172,13 @@ TEST_CASE("variadic when_all waits for all children on failure", "[when_all][exc
 }
 
 TEST_CASE("variadic when_all supports move-only and container results", "[when_all][move]") {
-    auto [p, v] = when_all(
-        []() -> Task<std::unique_ptr<int>> { co_return std::make_unique<int>(3); }(),
-        []() -> Task<std::vector<std::unique_ptr<int>>> {
-            std::vector<std::unique_ptr<int>> out;
-            out.push_back(std::make_unique<int>(4));
-            co_return out;
-        }()
-    ).result();
+    auto [p, v] = when_all([]() -> Task<std::unique_ptr<int>> { co_return std::make_unique<int>(3); }(),
+                           []() -> Task<std::vector<std::unique_ptr<int>>> {
+                               std::vector<std::unique_ptr<int>> out;
+                               out.push_back(std::make_unique<int>(4));
+                               co_return out;
+                           }())
+                      .result();
     REQUIRE(*p == 3);
     REQUIRE(*v.at(0) == 4);
 }

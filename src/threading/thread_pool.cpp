@@ -27,7 +27,8 @@ ThreadPool* current_pool() noexcept {
     return t_current_pool;
 }
 
-CurrentPoolScope::CurrentPoolScope(ThreadPool* pool) noexcept : previous_(t_current_pool) {
+CurrentPoolScope::CurrentPoolScope(ThreadPool* pool) noexcept
+    : previous_(t_current_pool) {
     t_current_pool = pool;
 }
 
@@ -66,24 +67,24 @@ ThreadPool& ThreadPool::global() {
     return instance;
 }
 
-ThreadPool::ThreadPool() : ThreadPool(default_thread_count().load()) {}
+ThreadPool::ThreadPool()
+    : ThreadPool(default_thread_count().load()) {}
 
-ThreadPool::ThreadPool(std::size_t thread_count) {
+ThreadPool::ThreadPool(std::size_t thread_count)
+    : ThreadPool(NoThreads{}) {
+    // The delegated-to constructor has completed, so if starting a thread throws below the destructor
+    // still runs and joins whatever was started.
     if (thread_count == 0) thread_count = 2;
 
-    // If starting any thread fails the destructor will not run, so clean up what was started.
-    try {
-        workers_.reserve(thread_count);
-        for (std::size_t i = 0; i < thread_count; ++i) {
-            workers_.emplace_back([this](std::stop_token st) { worker_loop(st); });
-        }
-
-        timer_thread_ = std::jthread([this](std::stop_token st) { timer_loop(st); });
-    } catch (...) {
-        shutdown();
-        throw;
+    workers_.reserve(thread_count);
+    for (std::size_t i = 0; i < thread_count; ++i) {
+        workers_.emplace_back([this](std::stop_token st) { worker_loop(st); });
     }
+
+    timer_thread_ = std::jthread([this](std::stop_token st) { timer_loop(st); });
 }
+
+ThreadPool::ThreadPool(NoThreads) noexcept {}
 
 ThreadPool::~ThreadPool() {
     shutdown();
@@ -112,7 +113,8 @@ void ThreadPool::shutdown() noexcept {
     // Step 3: stop and join the workers; they keep draining the queue until it is empty.
     {
         std::lock_guard lock(queue_mtx_);
-        for (auto& w : workers_) w.request_stop();
+        for (auto& w : workers_)
+            w.request_stop();
     }
     queue_cv_.notify_all();
     for (auto& w : workers_) {
@@ -141,7 +143,8 @@ void ThreadPool::schedule(std::coroutine_handle<> h) {
 void ThreadPool::schedule_after(std::coroutine_handle<> h, std::chrono::milliseconds duration) {
     // Clamp BEFORE converting to the clock's finer resolution: adding e.g. milliseconds::max() to a
     // time_point overflows (UB) and would wrap into the past. 100 years is "forever" for a timer.
-    constexpr auto max_delay = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::hours(24 * 365 * 100));
+    constexpr auto max_delay =
+        std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::hours(24 * 365 * 100));
     if (duration < std::chrono::milliseconds::zero()) duration = std::chrono::milliseconds::zero();
     if (duration > max_delay) duration = max_delay;
 

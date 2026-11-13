@@ -1,5 +1,6 @@
 #pragma once
 
+#include <aw/tpl/threading/detail/pool_scheduling.hpp>
 #include <aw/tpl/threading/detail/timer_entry.hpp>
 
 #include <chrono>
@@ -14,15 +15,6 @@
 #include <vector>
 
 namespace aw::tpl::threading {
-
-class ThreadPool;
-
-namespace detail {
-
-void schedule_on_pool(ThreadPool* pool, std::coroutine_handle<> h);
-void schedule_after_on_pool(ThreadPool* pool, std::coroutine_handle<> h, std::chrono::milliseconds delay);
-
-} // namespace detail
 
 /**
  * @class ThreadPool
@@ -43,7 +35,7 @@ public:
      * @brief Returns the process-wide default thread pool instance (similar to C# ThreadPool).
      * @return Reference to the global @c ThreadPool singleton.
      */
-    static ThreadPool& global();
+    [[nodiscard]] static ThreadPool& global();
 
     /**
      * @brief Constructs a pool with the configured default worker thread count.
@@ -71,8 +63,14 @@ public:
     [[nodiscard]] std::size_t thread_count() const noexcept;
 
 private:
+    /// Tag selecting the constructor that only initializes members and starts no thread.
+    struct NoThreads {};
+
+    explicit ThreadPool(NoThreads) noexcept;
+
     friend void detail::schedule_on_pool(ThreadPool* pool, std::coroutine_handle<> h);
-    friend void detail::schedule_after_on_pool(ThreadPool* pool, std::coroutine_handle<> h, std::chrono::milliseconds delay);
+    friend void detail::schedule_after_on_pool(ThreadPool* pool, std::coroutine_handle<> h,
+                                               std::chrono::milliseconds delay);
 
     /// Enqueues a coroutine handle to be resumed on one of the worker threads.
     void schedule(std::coroutine_handle<> h);

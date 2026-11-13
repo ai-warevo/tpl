@@ -27,7 +27,7 @@ int main() {
     {
         ThreadPool pool(2);
         std::cout << "private pool threads: " << pool.thread_count() << "\n";
-    }   // destruction resumes pending timers, drains queued work and joins every thread
+    } // destruction resumes pending timers, drains queued work and joins every thread
 
     // Blocking on a pool worker is a bug and throws std::logic_error instead of deadlocking.
     auto bad = []() -> Task<void> {

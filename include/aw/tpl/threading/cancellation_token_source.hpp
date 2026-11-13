@@ -14,6 +14,7 @@ namespace aw::tpl::threading {
  */
 class CancellationTokenSource {
 public:
+    /// Creates a source that is canceled only by an explicit @c cancel() or @c cancel_after().
     CancellationTokenSource();
 
     /**

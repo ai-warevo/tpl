@@ -13,7 +13,13 @@ namespace aw::tpl {
  */
 class TimeoutException : public std::runtime_error {
 public:
+    /// Creates the exception with the .NET default message ("The operation timed out.").
     TimeoutException();
+
+    /**
+     * @brief Creates the exception with a custom message.
+     * @param[in] message Text returned by @c what().
+     */
     explicit TimeoutException(const std::string& message);
 };
 

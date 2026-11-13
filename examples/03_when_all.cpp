@@ -35,8 +35,8 @@ Task<int> failing() {
 Task<void> app() {
     // 1. Heterogeneous: a tuple of results; Task<void> children yield std::monostate.
     auto [n, s, unit] = co_await when_all(number(1, 120ms), text("two", 60ms), nothing(30ms));
-    std::cout << "tuple: " << n << ", " << s << ", monostate? "
-              << std::boolalpha << std::is_same_v<decltype(unit), std::monostate> << "\n";
+    std::cout << "tuple: " << n << ", " << s << ", monostate? " << std::boolalpha
+              << std::is_same_v<decltype(unit), std::monostate> << "\n";
 
     // 2. Only Task<void> children: the result is a Task<void>.
     co_await when_all(nothing(20ms), nothing(40ms));
@@ -44,10 +44,12 @@ Task<void> app() {
 
     // 3. Vector of Task<T>: a vector of results in the original order.
     std::vector<Task<int>> many;
-    for (int i = 1; i <= 4; ++i) many.push_back(number(i * 10, std::chrono::milliseconds(100 - i * 20)));
+    for (int i = 1; i <= 4; ++i)
+        many.push_back(number(i * 10, std::chrono::milliseconds(100 - i * 20)));
     std::vector<int> results = co_await when_all(std::move(many));
     std::cout << "vector:";
-    for (int r : results) std::cout << " " << r;
+    for (int r : results)
+        std::cout << " " << r;
     std::cout << "\n";
 
     // 4. Vector of Task<void>.

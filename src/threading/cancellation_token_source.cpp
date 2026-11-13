@@ -38,7 +38,8 @@ void CancellationTokenSource::cancel_after(std::chrono::milliseconds delay) {
             // A throwing user callback must not take the timer coroutine down; all callbacks already ran.
         }
         co_return;
-    }(std::move(state), delay).start();
+    }(std::move(state), delay)
+                                                                                          .start();
 }
 
 } // namespace aw::tpl::threading

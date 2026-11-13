@@ -62,7 +62,7 @@ TEST_CASE("Timer queue orders earlier deadlines ahead of later ones", "[thread_p
     };
 
     auto t1 = timed_worker(150ms, order, first_finished);
-    std::this_thread::sleep_for(10ms); // Ensure t1 is already sleeping in timer_loop
+    std::this_thread::sleep_for(10ms);                    // Ensure t1 is already sleeping in timer_loop
     auto t2 = timed_worker(30ms, order, second_finished); // Should wake up timer_cv_ and execute before t1
 
     when_all(t1, t2).wait();
@@ -236,7 +236,8 @@ TEST_CASE("ThreadPool sizes 1 and 8 construct and run work", "[thread_pool]") {
             ThreadPool pool(n);
             REQUIRE(pool.thread_count() == n);
             CurrentPoolGuard guard(&pool);
-            for (int i = 0; i < 20; ++i) tasks.push_back(sleep_then_bump(0ms, counter));
+            for (int i = 0; i < 20; ++i)
+                tasks.push_back(sleep_then_bump(0ms, counter));
         }
         REQUIRE(counter.load() == 20);
     }

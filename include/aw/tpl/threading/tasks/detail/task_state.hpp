@@ -35,9 +35,7 @@ struct TaskState : TaskState<void> {
      * @brief One-shot claim used when a move-only result is extracted.
      * @return True for the first caller only.
      */
-    bool try_take() noexcept {
-        return !value_taken.exchange(true, std::memory_order_acq_rel);
-    }
+    bool try_take() noexcept { return !value_taken.exchange(true, std::memory_order_acq_rel); }
 };
 
 } // namespace aw::tpl::threading::tasks::detail

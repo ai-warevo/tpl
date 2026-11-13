@@ -60,7 +60,6 @@ std::coroutine_handle<> TaskStateBase::finish() {
 }
 
 void TaskStateBase::complete() {
-    // Use finish() to perform cleanup and get the handle for symmetric transfer.
     std::coroutine_handle<> first = finish();
     first.resume();
 }

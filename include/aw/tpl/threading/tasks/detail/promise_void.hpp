@@ -11,6 +11,7 @@ namespace aw::tpl::threading::tasks::detail {
  */
 template <>
 struct Promise<void> : PromiseBase<void> {
+    /// Creates the @c Task<void> handle sharing this promise's state.
     Task<void> get_return_object() noexcept;
 
     void return_void() {}

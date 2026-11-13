@@ -20,6 +20,7 @@ struct CancellationState;
  */
 class CancellationToken {
 public:
+    /// Creates a token that can never be canceled (same as @c none()).
     CancellationToken() noexcept = default;
 
     /**
@@ -63,6 +64,7 @@ public:
 private:
     friend class CancellationTokenSource;
 
+    /// Used by @c CancellationTokenSource to hand out tokens bound to its state.
     explicit CancellationToken(std::shared_ptr<detail::CancellationState> state) noexcept;
 
     std::shared_ptr<detail::CancellationState> state_;

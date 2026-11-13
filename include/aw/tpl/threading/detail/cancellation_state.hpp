@@ -42,7 +42,7 @@ struct CancellationState {
     /**
      * @brief Number of callbacks currently registered (diagnostic).
      */
-    std::size_t callback_count();
+    [[nodiscard]] std::size_t callback_count();
 };
 
 } // namespace aw::tpl::threading::detail

@@ -22,6 +22,7 @@ namespace aw::tpl::threading::detail {
  */
 class CurrentPoolScope {
 public:
+    /// Makes @p pool the calling thread's current pool until the scope ends.
     explicit CurrentPoolScope(ThreadPool* pool) noexcept;
     ~CurrentPoolScope() noexcept;
 

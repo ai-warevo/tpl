@@ -14,7 +14,7 @@ using namespace aw::tpl::threading;
 using namespace aw::tpl::threading::tasks;
 
 Task<std::string> fetch_from_server(std::string name, std::chrono::milliseconds latency, CancellationToken token) {
-    co_await async_sleep(latency, token);   // throws OperationCanceledException when canceled
+    co_await async_sleep(latency, token); // throws OperationCanceledException when canceled
     co_return "response from " + name;
 }
 
@@ -58,7 +58,7 @@ Task<void> app() {
         std::cout << "1. " << result << (completed_task == task2 ? " (task2 won)" : " (task1 won)") << "\n";
 
         try {
-            (void)co_await task1;   // the loser was canceled
+            (void)co_await task1; // the loser was canceled
         } catch (const OperationCanceledException&) {
             std::cout << "   task1 was canceled\n";
         }
@@ -84,8 +84,8 @@ Task<void> app() {
 
         Task<void> winner = co_await when_any(slow, quick, text);
         std::cout << "3. winner is `quick`? " << (winner == quick) << "\n";
-        co_await winner;                       // observe completion / rethrow failure
-        co_await when_all(slow, text);         // the losers keep running; wait for them if you care
+        co_await winner;               // observe completion / rethrow failure
+        co_await when_all(slow, text); // the losers keep running; wait for them if you care
     }
 
     // 4. A failed task also counts as completed; the failure appears on the second await.
@@ -93,13 +93,13 @@ Task<void> app() {
         std::vector<Task<int>> with_failure;
         with_failure.push_back(number(1, 200ms));
         with_failure.push_back(failing(10ms));
-        Task<int> completed = co_await when_any(with_failure);   // does not throw
+        Task<int> completed = co_await when_any(with_failure); // does not throw
         try {
-            (void)co_await completed;                            // throws here
+            (void)co_await completed; // throws here
         } catch (const std::runtime_error& ex) {
             std::cout << "4. winner failed with: " << ex.what() << "\n";
         }
-        co_await nothing(200ms);               // let the slow loser finish before leaving the scope
+        co_await nothing(200ms); // let the slow loser finish before leaving the scope
     }
 
     // 5. An empty vector is an error.

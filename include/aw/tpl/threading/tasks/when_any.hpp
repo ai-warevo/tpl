@@ -66,7 +66,7 @@ Task<Task<T>> when_any(std::vector<Task<T>> tasks) {
  * @return @c Task<Task<T>> if all @p Ts are the same type @c T, otherwise @c Task<Task<void>>.
  */
 template <typename... Ts>
-    requires (sizeof...(Ts) > 0)
+    requires(sizeof...(Ts) > 0)
 auto when_any(Task<Ts>... tasks) {
     using First = std::tuple_element_t<0, std::tuple<Ts...>>;
     if constexpr ((std::is_same_v<Ts, First> && ...)) {

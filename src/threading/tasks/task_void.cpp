@@ -13,9 +13,6 @@ bool Task<void>::await_ready() const {
 }
 
 std::coroutine_handle<> Task<void>::await_suspend(std::coroutine_handle<> awaiting) {
-    if (!state_) {
-        return awaiting; // await_resume() will throw std::logic_error
-    }
     return state_->suspend_or_resume(awaiting);
 }
 

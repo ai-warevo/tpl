@@ -10,14 +10,14 @@ using namespace aw::tpl::threading;
 using namespace aw::tpl::threading::tasks;
 
 Task<int> long_operation(CancellationToken token) {
-    co_await async_sleep(5000ms, token);   // throws OperationCanceledException when canceled
+    co_await async_sleep(5000ms, token); // throws OperationCanceledException when canceled
     co_return 1;
 }
 
 Task<int> polling_loop(CancellationToken token) {
     int iterations = 0;
     while (true) {
-        token.throw_if_cancellation_requested();   // manual cooperative check
+        token.throw_if_cancellation_requested(); // manual cooperative check
         co_await async_sleep(10ms);
         ++iterations;
         if (iterations == 1000) co_return iterations;
@@ -72,9 +72,9 @@ int main() {
         (void)token.unregister_callback(id2);
 
         cts.cancel();
-        cts.cancel();   // idempotent
+        cts.cancel(); // idempotent
         (void)id1;
-        token.register_callback([&] { calls += 10; });   // already canceled: runs right away
+        token.register_callback([&] { calls += 10; }); // already canceled: runs right away
         std::cout << "   callback total = " << calls.load() << " (1 + 10)\n";
     }
 
@@ -83,7 +83,10 @@ int main() {
         CancellationToken none = CancellationToken::none();
         std::cout << "5. none() canceled? " << std::boolalpha << none.is_cancellation_requested() << "\n";
         std::cout << "   sleep with none(): ";
-        auto sleeper = [](CancellationToken t) -> Task<int> { co_await async_sleep(20ms, t); co_return 7; };
+        auto sleeper = [](CancellationToken t) -> Task<int> {
+            co_await async_sleep(20ms, t);
+            co_return 7;
+        };
         std::cout << sleeper(none).result() << "\n";
     }
     return 0;

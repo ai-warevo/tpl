@@ -1,8 +1,11 @@
 #pragma once
 
-// Non-generic Task (C# System.Threading.Tasks.Task). Include <aw/tpl/threading/tasks/task.hpp> instead:
-// it provides both this class and the generic Task<T>. Everything that does not depend on a template
-// parameter is implemented in src/threading/tasks/task_void.cpp.
+/**
+ * @file task_void.hpp
+ * @brief Non-generic @c Task<void> (C# @c System.Threading.Tasks.Task). Include @c task.hpp instead: it provides
+ *        both this class and the generic @c Task<T>. Everything independent of a template parameter is
+ *        implemented in @c src/threading/tasks/task_void.cpp.
+ */
 
 #include <aw/tpl/threading/tasks/task_fwd.hpp>
 #include <aw/tpl/threading/tasks/detail/completion_awaiter.hpp>
@@ -50,8 +53,8 @@ public:
      * @param[in] other Source task.
      */
     template <typename U>
-        requires (!std::is_void_v<U>)
-    Task(const Task<U>& other) noexcept  // NOLINT(google-explicit-constructor): implicit like C# upcast
+        requires(!std::is_void_v<U>)
+    Task(const Task<U>& other) noexcept // NOLINT(google-explicit-constructor): implicit like C# upcast
         : state_(other.state_) {}
 
     /**
@@ -72,6 +75,7 @@ public:
      * @brief Suspends the caller until this task finishes using C++20 symmetric transfer,
      *        or immediately resumes @p awaiting if the task completed concurrently.
      * @note Not noexcept: attaching the continuation locks a mutex and may allocate.
+     *       Only reached when @c await_ready() returned false, i.e. the task has a state.
      */
     std::coroutine_handle<> await_suspend(std::coroutine_handle<> awaiting);
 
@@ -86,7 +90,7 @@ public:
      * @brief Awaitable that only waits for completion without rethrowing the task's exception
      *        (used by combinators such as @c when_any).
      */
-    detail::CompletionAwaiter completion() const noexcept;
+    [[nodiscard]] detail::CompletionAwaiter completion() const noexcept;
 
     /**
      * @brief Synchronously blocks the calling thread until the task completes

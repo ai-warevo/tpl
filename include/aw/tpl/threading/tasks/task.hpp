@@ -63,9 +63,7 @@ public:
      * @brief Checks whether the task has already finished without suspending.
      * @return True if result is already available.
      */
-    bool await_ready() const {
-        return !state_ || state_->is_ready();
-    }
+    bool await_ready() const { return !state_ || state_->is_ready(); }
 
     /**
      * @brief Suspends the caller until this task finishes using C++20 symmetric transfer,
@@ -73,11 +71,9 @@ public:
      * @param[in] awaiting Handle of the coroutine executing @c co_await.
      * @return @p awaiting if already ready; @c std::noop_coroutine() if suspended.
      * @note Not noexcept: attaching the continuation locks a mutex and may allocate.
+     *       Only reached when @c await_ready() returned false, i.e. the task has a state.
      */
     std::coroutine_handle<> await_suspend(std::coroutine_handle<> awaiting) {
-        if (!state_) {
-            return awaiting; // await_resume() will throw std::logic_error
-        }
         return state_->suspend_or_resume(awaiting);
     }
 
@@ -107,9 +103,7 @@ public:
      *        extracts (moves out) the result. Used by combinators such as @c when_any that must not
      *        consume a move-only result on behalf of the user.
      */
-    detail::CompletionAwaiter completion() const noexcept {
-        return detail::CompletionAwaiter{state_};
-    }
+    [[nodiscard]] detail::CompletionAwaiter completion() const noexcept { return detail::CompletionAwaiter{state_}; }
 
     /**
      * @brief Synchronously blocks until completion and returns the computed value

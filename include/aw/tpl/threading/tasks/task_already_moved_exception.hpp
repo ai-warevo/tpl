@@ -10,6 +10,7 @@ namespace aw::tpl::threading::tasks {
  */
 class TaskAlreadyMovedException : public std::logic_error {
 public:
+    /// Creates the exception with a message explaining that the move-only result is gone.
     TaskAlreadyMovedException();
 };
 

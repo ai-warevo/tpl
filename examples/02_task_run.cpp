@@ -18,9 +18,8 @@ struct MoveOnlyJob {
 
 Task<int> parallel_sum(std::vector<int> numbers) {
     // run() stores the callable inside the coroutine frame, so capturing by value is always safe.
-    int total = co_await Task<>::run([numbers = std::move(numbers)] {
-        return std::accumulate(numbers.begin(), numbers.end(), 0);
-    });
+    int total = co_await Task<>::run(
+        [numbers = std::move(numbers)] { return std::accumulate(numbers.begin(), numbers.end(), 0); });
     co_return total;
 }
 

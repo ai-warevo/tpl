@@ -61,7 +61,7 @@ auto when_all(std::vector<Task<T>> tasks) {
  * @return @c Task<void> or @c Task<std::tuple<...>>.
  */
 template <typename... Ts>
-    requires (sizeof...(Ts) > 0)
+    requires(sizeof...(Ts) > 0)
 auto when_all(Task<Ts>... tasks) {
     if constexpr ((std::is_void_v<Ts> && ...)) {
         std::vector<Task<void>> vec;
@@ -91,14 +91,12 @@ auto when_all(Task<Ts>... tasks) {
             std::tuple<detail::WhenAllSettled<Ts>...> outcomes{(co_await helper(list))...};
 
             std::exception_ptr first;
-            std::apply([&first](auto&... o) {
-                ((void)(first || (first = o.exception)), ...);
-            }, outcomes);
+            std::apply([&first](auto&... o) { ((void)(first || (first = o.exception)), ...); }, outcomes);
             if (first) std::rethrow_exception(first);
 
-            co_return std::apply([](auto&... o) {
-                return std::tuple<detail::WhenAllElementT<Ts>...>(std::move(*o.value)...);
-            }, outcomes);
+            co_return std::apply(
+                [](auto&... o) { return std::tuple<detail::WhenAllElementT<Ts>...>(std::move(*o.value)...); },
+                outcomes);
         }(settle, std::move(tasks)...);
     }
 }

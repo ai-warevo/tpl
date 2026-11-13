@@ -31,7 +31,8 @@ struct is_truly_copyable<std::array<E, N>> : std::bool_constant<is_truly_copyabl
 template <typename E>
 struct is_truly_copyable<std::optional<E>> : std::bool_constant<is_truly_copyable<E>::value> {};
 template <typename A, typename B>
-struct is_truly_copyable<std::pair<A, B>> : std::bool_constant<is_truly_copyable<A>::value && is_truly_copyable<B>::value> {};
+struct is_truly_copyable<std::pair<A, B>>
+    : std::bool_constant<is_truly_copyable<A>::value && is_truly_copyable<B>::value> {};
 template <typename... Es>
 struct is_truly_copyable<std::tuple<Es...>> : std::bool_constant<(is_truly_copyable<Es>::value && ...)> {};
 template <typename... Es>

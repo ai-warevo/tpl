@@ -23,7 +23,7 @@ struct FinalAwaiter {
 
     bool await_ready() const noexcept { return false; }
     std::coroutine_handle<> await_suspend(std::coroutine_handle<> h) noexcept;
-    void await_resume() const noexcept {}
+    void await_resume() const noexcept {} // LCOV_EXCL_LINE: the frame is never resumed after final suspend
 };
 
 } // namespace aw::tpl::threading::tasks::detail

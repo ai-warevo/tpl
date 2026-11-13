@@ -36,18 +36,14 @@ TEST_CASE("Task default construction and already-completed fast paths", "[task]"
     Task<int> empty_task;
     REQUIRE(empty_task.await_ready());
 
-    auto fast_coro = []() -> Task<int> {
-        co_return 77;
-    };
+    auto fast_coro = []() -> Task<int> { co_return 77; };
 
     auto t = fast_coro();
     REQUIRE(wait_until([&] { return t.await_ready(); })); // let the worker complete the task
     REQUIRE(t.await_ready());
     REQUIRE(t.result() == 77);
 
-    auto consumer = [](Task<int> already_done) -> Task<int> {
-        co_return co_await already_done;
-    };
+    auto consumer = [](Task<int> already_done) -> Task<int> { co_return co_await already_done; };
     REQUIRE(consumer(t).result() == 77);
 }
 
@@ -79,17 +75,13 @@ TEST_CASE("Task<void> and Task<T> propagate exceptions properly", "[task][except
 }
 
 TEST_CASE("Task::run propagates exceptions from throwing lambdas", "[task][run][exceptions]") {
-    auto task = Task<>::run([]() -> int {
-        throw std::runtime_error("lambda boom");
-    });
+    auto task = Task<>::run([]() -> int { throw std::runtime_error("lambda boom"); });
 
     REQUIRE_THROWS_AS(task.result(), std::runtime_error);
 }
 
 TEST_CASE("Task handles exceptions in Task::run and rapid co_await completion races", "[task][race]") {
-    auto throwing_run = Task<>::run([]() -> int {
-        throw std::runtime_error("run failure");
-    });
+    auto throwing_run = Task<>::run([]() -> int { throw std::runtime_error("run failure"); });
     REQUIRE_THROWS_AS(throwing_run.result(), std::runtime_error);
 
     // Stress instant completion race between await_ready() and try_attach_continuation()
@@ -118,9 +110,7 @@ TEST_CASE("Multiple coroutines can await the same Task", "[task][continuation]")
         co_return 7;
     }();
 
-    auto consumer = [](Task<int> already_done) -> Task<int> {
-        co_return co_await already_done;
-    };
+    auto consumer = [](Task<int> already_done) -> Task<int> { co_return co_await already_done; };
 
     // Create copies of the task to simulate multiple consumers
     auto t1 = slow_task;
@@ -162,7 +152,7 @@ TEST_CASE("TaskState::finish returns noop when nobody waits", "[task][state]") {
     auto handle = ts.finish();
     REQUIRE(handle == std::noop_coroutine());
     REQUIRE(ts.is_ready());
-    
+
     // Check that we can't attach after completion
     REQUIRE_FALSE(ts.try_attach_continuation(std::noop_coroutine()));
 }
@@ -171,11 +161,11 @@ TEST_CASE("TaskState::finish hands back the first continuation", "[task][state]"
     threading::tasks::detail::TaskState<int> ts;
     std::coroutine_handle<> first_handle = std::noop_coroutine();
     REQUIRE(ts.try_attach_continuation(first_handle));
-    
+
     // Attach a second handle
     std::coroutine_handle<> second_handle = std::noop_coroutine();
     REQUIRE(ts.try_attach_continuation(second_handle));
-    
+
     // Capture the returned handle
     auto returned_handle = ts.finish();
 
@@ -244,6 +234,16 @@ TEST_CASE("Empty and moved-from tasks throw logic_error instead of crashing", "[
         co_return false;
     };
     REQUIRE(awaiter(Task<int>{}).result());
+
+    auto void_awaiter = [](Task<void> t) -> Task<bool> {
+        try {
+            co_await t;
+        } catch (const std::logic_error&) {
+            co_return true;
+        }
+        co_return false;
+    };
+    REQUIRE(void_awaiter(Task<void>{}).result());
 }
 
 // --- Tasks 09-11: value storage ---
@@ -251,13 +251,20 @@ TEST_CASE("Empty and moved-from tasks throw logic_error instead of crashing", "[
 namespace {
 
 struct NoDefault {
-    explicit NoDefault(int x) : v(x) {}
+    explicit NoDefault(int x)
+        : v(x) {}
     int v;
 };
 
-Task<std::pair<int, int>> make_pair_task() { co_return {3, 4}; }
-Task<NoDefault> make_nodefault_task() { co_return NoDefault{5}; }
-Task<std::string> make_string_task() { co_return "abc"; }
+Task<std::pair<int, int>> make_pair_task() {
+    co_return {3, 4};
+}
+Task<NoDefault> make_nodefault_task() {
+    co_return NoDefault{5};
+}
+Task<std::string> make_string_task() {
+    co_return "abc";
+}
 
 Task<std::vector<std::unique_ptr<int>>> make_ptr_vector() {
     std::vector<std::unique_ptr<int>> v;
@@ -291,7 +298,8 @@ TEST_CASE("Task of vector<unique_ptr> is movable out", "[task][move]") {
 
 TEST_CASE("when_all over move-only tasks", "[when_all][move]") {
     std::vector<Task<std::unique_ptr<int>>> tasks;
-    for (int i = 1; i <= 3; ++i) tasks.push_back(make_ptr_task(i * 10));
+    for (int i = 1; i <= 3; ++i)
+        tasks.push_back(make_ptr_task(i * 10));
     auto results = when_all(std::move(tasks)).result();
     REQUIRE(results.size() == 3);
     for (int i = 0; i < 3; ++i) {
@@ -340,7 +348,8 @@ TEST_CASE("Concurrent extraction of a move-only result yields exactly one value"
             }
         });
     }
-    for (auto& th : threads) th.join();
+    for (auto& th : threads)
+        th.join();
     REQUIRE(successes.load() == 1);
     REQUIRE(already_moved.load() == 7);
 }

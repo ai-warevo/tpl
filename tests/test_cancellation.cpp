@@ -72,18 +72,14 @@ TEST_CASE("async_sleep aborts immediately if token is already canceled or via ca
     CancellationTokenSource pre_cts;
     pre_cts.cancel();
 
-    auto pre_canceled_task = [](CancellationToken t) -> Task<void> {
-        co_await async_sleep(1000ms, t);
-    };
+    auto pre_canceled_task = [](CancellationToken t) -> Task<void> { co_await async_sleep(1000ms, t); };
     REQUIRE_THROWS_AS(pre_canceled_task(pre_cts.token()).wait(), OperationCanceledException);
 
     // 2. Canceled mid-flight via cancel_after
     CancellationTokenSource timed_cts;
     timed_cts.cancel_after(30ms);
 
-    auto mid_flight_task = [](CancellationToken t) -> Task<void> {
-        co_await async_sleep(1000ms, t);
-    };
+    auto mid_flight_task = [](CancellationToken t) -> Task<void> { co_await async_sleep(1000ms, t); };
     REQUIRE_THROWS_AS(mid_flight_task(timed_cts.token()).wait(), OperationCanceledException);
 }
 
@@ -110,7 +106,7 @@ TEST_CASE("Cooperative cancellation with recording mock verification", "[cancell
 
     REQUIRE_THROWS_AS(task.result(), OperationCanceledException);
     std::lock_guard lock(mock.mtx);
-    REQUIRE(mock.step_args == std::vector<int>{10});  // step(11) never happens
+    REQUIRE(mock.step_args == std::vector<int>{10}); // step(11) never happens
     REQUIRE(mock.cancel_calls == 1);
 }
 
@@ -118,8 +114,8 @@ TEST_CASE("async_sleep with active token completes normally when not canceled", 
     CancellationTokenSource cts;
 
     auto normal_sleep = [](CancellationToken t) -> Task<int> {
-        co_await async_sleep(0ms, t);   // Hits duration.count() <= 0
-        co_await async_sleep(20ms, t);  // Completes timer without cancellation
+        co_await async_sleep(0ms, t);  // Hits duration.count() <= 0
+        co_await async_sleep(20ms, t); // Completes timer without cancellation
         co_return 42;
     };
 
@@ -150,7 +146,8 @@ Task<int> sleep_and_swallow_cancel(CancellationToken token) {
 TEST_CASE("The same sleep awaiter can be awaited twice", "[cancellation][sleep]") {
     CancellationTokenSource cts;
     auto task = await_same_sleep_twice(cts.token());
-    for (int i = 0; i < 400 && !task.await_ready(); ++i) std::this_thread::sleep_for(5ms);
+    for (int i = 0; i < 400 && !task.await_ready(); ++i)
+        std::this_thread::sleep_for(5ms);
     REQUIRE(task.await_ready());
     REQUIRE(task.result() == 1);
 }
@@ -185,8 +182,8 @@ TEST_CASE("Moved-from CancellationTokenSource is inert", "[cancellation][move]")
     auto token_a = a.token();
     CancellationTokenSource b(std::move(a));
 
-    REQUIRE_NOTHROW(a.cancel());          // NOLINT(bugprone-use-after-move)
-    REQUIRE_NOTHROW(a.cancel_after(1ms)); // NOLINT(bugprone-use-after-move)
+    REQUIRE_NOTHROW(a.cancel());                          // NOLINT(bugprone-use-after-move)
+    REQUIRE_NOTHROW(a.cancel_after(1ms));                 // NOLINT(bugprone-use-after-move)
     REQUIRE_FALSE(a.token().is_cancellation_requested()); // NOLINT(bugprone-use-after-move)
     REQUIRE_FALSE(token_a.is_cancellation_requested());
 
@@ -319,7 +316,8 @@ TEST_CASE("cancel_after still fires after the source is destroyed", "[cancellati
         cts.cancel_after(20ms);
     }
     bool fired = false;
-    for (int i = 0; i < 400 && !(fired = token.is_cancellation_requested()); ++i) std::this_thread::sleep_for(5ms);
+    for (int i = 0; i < 400 && !(fired = token.is_cancellation_requested()); ++i)
+        std::this_thread::sleep_for(5ms);
     REQUIRE(fired);
 }
 
@@ -328,7 +326,8 @@ TEST_CASE("Two cancel_after calls: the earlier deadline wins", "[cancellation][t
     cts.cancel_after(2000ms);
     cts.cancel_after(10ms);
     bool fired = false;
-    for (int i = 0; i < 400 && !(fired = cts.token().is_cancellation_requested()); ++i) std::this_thread::sleep_for(5ms);
+    for (int i = 0; i < 400 && !(fired = cts.token().is_cancellation_requested()); ++i)
+        std::this_thread::sleep_for(5ms);
     REQUIRE(fired);
 }
 
@@ -336,7 +335,8 @@ TEST_CASE("CancellationTokenSource(delay) cancels itself after the timeout", "[c
     CancellationTokenSource cts(30ms);
     REQUIRE_FALSE(cts.token().is_cancellation_requested());
     bool fired = false;
-    for (int i = 0; i < 400 && !(fired = cts.token().is_cancellation_requested()); ++i) std::this_thread::sleep_for(5ms);
+    for (int i = 0; i < 400 && !(fired = cts.token().is_cancellation_requested()); ++i)
+        std::this_thread::sleep_for(5ms);
     REQUIRE(fired);
 }
 

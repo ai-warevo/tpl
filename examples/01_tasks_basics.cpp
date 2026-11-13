@@ -13,7 +13,7 @@ using namespace aw::tpl::threading::tasks;
 
 Task<int> square(int x) {
     co_await async_sleep(50ms);
-    co_return x * x;
+    co_return x* x;
 }
 
 Task<void> log_line(std::string text) {

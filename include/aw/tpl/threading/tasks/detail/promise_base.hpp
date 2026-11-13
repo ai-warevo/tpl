@@ -30,9 +30,7 @@ struct PromiseBase {
     /**
      * @brief Stores an unhandled exception into the shared state; completion happens in final_suspend.
      */
-    void unhandled_exception() noexcept {
-        state->exception = std::current_exception();
-    }
+    void unhandled_exception() noexcept { state->exception = std::current_exception(); }
 };
 
 } // namespace aw::tpl::threading::tasks::detail

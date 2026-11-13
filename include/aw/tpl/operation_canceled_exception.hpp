@@ -11,6 +11,7 @@ namespace aw::tpl {
  */
 class OperationCanceledException : public std::runtime_error {
 public:
+    /// Creates the exception with the .NET default message ("Operation was canceled.").
     OperationCanceledException();
 };
 

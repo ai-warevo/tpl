@@ -42,7 +42,7 @@ struct TaskStateBase {
      * @brief Checks whether the task has completed in a thread-safe manner.
      * @return True if result or exception is ready.
      */
-    bool is_ready();
+    [[nodiscard]] bool is_ready();
 
     /**
      * @brief Registers an awaiting coroutine if the task is not yet complete.
