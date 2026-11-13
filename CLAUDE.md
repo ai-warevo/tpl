@@ -27,6 +27,26 @@ ctest --test-dir build/dev -R "when_any" --output-on-failure      # subset (Catc
 - **Leave to CI:** sanitizers (`AW_TPL_SANITIZE=address|thread`), coverage (`AW_TPL_ENABLE_COVERAGE`, gcovr), MSVC/macOS builds, install/packaging. Don't run them locally unless debugging a race/UB report.
 - Adding a source or header? Register it in the root `CMakeLists.txt` (`add_library` sources **and** the `FILE_SET HEADERS` list); new tests go in `tests/CMakeLists.txt`, new examples in `examples/CMakeLists.txt`.
 
+## Changelog & releases
+
+`CHANGELOG.md` follows [Keep a Changelog](https://keepachangelog.com) and SemVer. It is the single source of release notes: the CI `release` job (`.github/workflows/ci.yml`) extracts the `## [X.Y.Z]` section matching the pushed tag and appends the prebuilt-SDK / `FetchContent` snippet, and fails if the section is missing.
+
+- **Every user-visible change adds a bullet under `## [Unreleased]` in the same commit** (public API, behaviour, build options, CI/tooling users see). Skip pure refactors and tests with no visible effect. One line per change, imperative, backticks for identifiers.
+- **Categories** (omit empty ones, spell exactly): `Breaking` (API/ABI/header/namespace breaks; custom heading, not in the Keep a Changelog spec), `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed`, `Security`.
+- **Version bump** is derived from the categories that have entries, highest wins: `Breaking`/`Removed` → major, `Added`/`Deprecated` → minor, `Fixed`/`Changed`/`Security` → patch. A bullet under the wrong category therefore bumps the wrong number; entries outside a `###` category or unknown categories make the scripts abort.
+- Don't hand-edit released sections, dates or the compare links at the bottom; the scripts maintain them. Keep `[Unreleased]` at the top, newest release first.
+
+Release helpers (equivalent behaviour; run from anywhere inside the repo, never edit them without keeping both in sync and re-testing both):
+
+```sh
+scripts/release.sh [--dry-run] [--push]          # Linux/macOS (bash >= 3.2)
+./scripts/release.ps1 [-DryRun] [-Push]          # Windows PowerShell 5.1+ / pwsh
+make release-dry-run                              # picks the right script per OS
+make release [PUSH=1]
+```
+
+They print the detected categories and next `vX.Y.Z`, then promote `[Unreleased]` to `## [X.Y.Z] - <today>` (empty categories dropped, compare links updated, file's LF/CRLF endings kept), commit **only** `CHANGELOG.md` as `release vX.Y.Z`, and create the annotated tag `vX.Y.Z`. They refuse to run with an empty `[Unreleased]`, an existing tag, staged changes, or other uncommitted tracked files. `--push`/`-Push` runs `git push --atomic $RELEASE_REMOTE(origin) HEAD refs/tags/vX.Y.Z`; pushing the tag is what triggers the GitHub release. `CMakeLists.txt` `project(VERSION)` is **not** bumped by the scripts.
+
 ## Testing discipline
 
 - Every new feature, edge case, error path and branch gets a Catch2 test in `tests/` (tag with `[area]`). No untested code.

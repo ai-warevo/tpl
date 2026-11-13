@@ -18,7 +18,7 @@ else
     DEMO_DIR = ./$(BUILD_DIR_DEMO)/examples
 endif
 
-.PHONY: test demo clean
+.PHONY: test demo clean release release-dry-run
 
 # Configure, build, and run tests only
 test:
@@ -34,3 +34,20 @@ demo:
 
 clean:
 	rm -rf $(BUILD_DIR)
+
+# Cut a SemVer release from CHANGELOG.md [Unreleased]: bump, commit, tag. `make release PUSH=1` also pushes.
+ifeq ($(PLATFORM),windows)
+    RELEASE_CMD = powershell -NoProfile -ExecutionPolicy Bypass -File scripts/release.ps1
+    RELEASE_PUSH = -Push
+    RELEASE_DRY = -DryRun
+else
+    RELEASE_CMD = bash scripts/release.sh
+    RELEASE_PUSH = --push
+    RELEASE_DRY = --dry-run
+endif
+
+release:
+	$(RELEASE_CMD) $(if $(PUSH),$(RELEASE_PUSH))
+
+release-dry-run:
+	$(RELEASE_CMD) $(RELEASE_DRY)
