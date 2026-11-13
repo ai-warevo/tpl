@@ -1,6 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <aw/tpl/when_all.hpp>
 
+#include <atomic>
 #include <chrono>
 #include <stdexcept>
 #include <string>
@@ -14,12 +15,13 @@ TEST_CASE("when_all handles heterogeneous tasks including void", "[when_all]") {
         auto [num, text, unit] = co_await when_all(
             []() -> Task<int> { co_await async_sleep(20ms); co_return 12; }(),
             []() -> Task<std::string> { co_await async_sleep(10ms); co_return "tpl"; }(),
-            []() -> Task<void> { co_await async_sleep(15ms); }()
+            []() -> Task<void> { co_await async_sleep(15ms); co_return; }()
         );
 
         REQUIRE(num == 12);
         REQUIRE(text == "tpl");
         REQUIRE(std::is_same_v<decltype(unit), std::monostate>);
+        co_return;
     };
 
     runner().wait();
@@ -37,14 +39,15 @@ TEST_CASE("when_all handles vectors of Task<T> and Task<void>", "[when_all][vect
     auto results = when_all(std::move(int_tasks)).result();
     REQUIRE(results == std::vector<int>{10, 20, 30, 40});
 
-    // 2. Vector of Task<void>
+    // 2. Vector of Task<void> (pass counter by parameter to avoid dangling lambda capture)
     std::atomic<int> counter{0};
     std::vector<Task<void>> void_tasks;
     for (int i = 0; i < 3; ++i) {
-        void_tasks.push_back([&]() -> Task<void> {
+        void_tasks.push_back([](std::atomic<int>& cnt) -> Task<void> {
             co_await async_sleep(10ms);
-            ++counter;
-        }());
+            ++cnt;
+            co_return;
+        }(counter));
     }
     when_all(std::move(void_tasks)).wait();
     REQUIRE(counter.load() == 3);

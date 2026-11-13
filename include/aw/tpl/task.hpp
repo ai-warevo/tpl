@@ -223,6 +223,26 @@ public:
         return await_resume();
     }
 
+    /**
+     * @brief Offloads a callable (including capturing lambdas) onto the thread pool safely
+     *        (equivalent to C# @c Task.Run). Captures the callable by value inside the coroutine frame
+     *        to prevent dangling-lambda lifetime issues.
+     * @tparam Func Callable type (lambda, function pointer, functor).
+     * @param[in] fn Callable to execute on a worker thread.
+     * @return @c Task<std::invoke_result_t<Func>> representing the asynchronous execution.
+     */
+    template <typename Func>
+        requires std::invocable<Func>
+    static auto run(Func fn) -> Task<std::invoke_result_t<Func>> {
+        using Ret = std::invoke_result_t<Func>;
+        if constexpr (std::is_void_v<Ret>) {
+            fn();
+            co_return;
+        } else {
+            co_return fn();
+        }
+    }
+
 private:
     /**
      * @brief Blocks the calling thread on the completion semaphore until the task finishes.
