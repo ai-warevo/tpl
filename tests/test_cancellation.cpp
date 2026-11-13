@@ -1,5 +1,6 @@
 #include <catch2/catch_test_macros.hpp>
 #include <aw/tpl/tpl.hpp>
+#include <aw/tpl/threading/detail/pool_scheduling.hpp>
 
 #include <atomic>
 #include <chrono>
@@ -10,6 +11,7 @@
 
 using namespace std::chrono_literals;
 using namespace aw::tpl;
+using namespace aw::tpl::threading;
 using namespace aw::tpl::threading::tasks;
 
 namespace {
@@ -264,14 +266,10 @@ Task<ThreadPool*> cancelled_sleep_pool(CancellationToken token) {
         co_await async_sleep(5000ms, token);
     } catch (const OperationCanceledException&) {
     }
-    co_return detail::current_pool;
+    co_return threading::detail::current_pool();
 }
 
-struct PoolScope {
-    ThreadPool* previous;
-    explicit PoolScope(ThreadPool* p) : previous(detail::current_pool) { detail::current_pool = p; }
-    ~PoolScope() { detail::current_pool = previous; }
-};
+using PoolScope = threading::detail::CurrentPoolScope;
 
 } // namespace
 

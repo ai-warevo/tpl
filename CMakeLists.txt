@@ -52,8 +52,25 @@ if(NOT AW_TPL_HAS_CXX20_RUNTIME)
 endif()
 
 add_library(aw_tpl STATIC
-    src/thread_pool.cpp
-    src/cancellation.cpp
+    src/operation_canceled_exception.cpp
+    src/timeout_exception.cpp
+    src/threading/cancellation_token.cpp
+    src/threading/cancellation_token_source.cpp
+    src/threading/thread_pool.cpp
+    src/threading/detail/cancellation_state.cpp
+    src/threading/detail/delay_awaiter.cpp
+    src/threading/tasks/async_sleep.cpp
+    src/threading/tasks/task_already_moved_exception.cpp
+    src/threading/tasks/task_void.cpp
+    src/threading/tasks/detail/cancelable_sleep_awaiter.cpp
+    src/threading/tasks/detail/completion_awaiter.cpp
+    src/threading/tasks/detail/final_awaiter.cpp
+    src/threading/tasks/detail/initial_schedule_awaiter.cpp
+    src/threading/tasks/detail/promise_void.cpp
+    src/threading/tasks/detail/task_state_base.cpp
+    src/threading/tasks/detail/when_any_awaiter.cpp
+    src/threading/tasks/detail/when_any_state.cpp
+    src/threading/tasks/detail/when_any_watcher.cpp
 )
 add_library(aw::tpl ALIAS aw_tpl)
 
@@ -73,17 +90,40 @@ target_sources(aw_tpl
         FILE_SET HEADERS
         BASE_DIRS include
         FILES
+            include/aw/tpl/operation_canceled_exception.hpp
+            include/aw/tpl/timeout_exception.hpp
             include/aw/tpl/tpl.hpp
-            include/aw/tpl/thread_pool.hpp
+            include/aw/tpl/threading/cancellation_token.hpp
+            include/aw/tpl/threading/cancellation_token_source.hpp
+            include/aw/tpl/threading/thread_pool.hpp
+            include/aw/tpl/threading/detail/cancellation_state.hpp
+            include/aw/tpl/threading/detail/delay_awaiter.hpp
+            include/aw/tpl/threading/detail/detached.hpp
+            include/aw/tpl/threading/detail/pool_scheduling.hpp
+            include/aw/tpl/threading/detail/timer_entry.hpp
+            include/aw/tpl/threading/tasks/async_sleep.hpp
             include/aw/tpl/threading/tasks/task.hpp
-            include/aw/tpl/threading/tasks/task_exceptions.hpp
-            include/aw/tpl/threading/tasks/initial_schedule_awaiter.hpp
-            include/aw/tpl/threading/tasks/task_state.hpp
-            include/aw/tpl/threading/tasks/promise.hpp
-            include/aw/tpl/when_all.hpp
-            include/aw/tpl/when_any.hpp
-            include/aw/tpl/cancellation.hpp
-            include/aw/tpl/detached.hpp
+            include/aw/tpl/threading/tasks/task_already_moved_exception.hpp
+            include/aw/tpl/threading/tasks/task_fwd.hpp
+            include/aw/tpl/threading/tasks/task_void.hpp
+            include/aw/tpl/threading/tasks/when_all.hpp
+            include/aw/tpl/threading/tasks/when_any.hpp
+            include/aw/tpl/threading/tasks/detail/cancelable_sleep_awaiter.hpp
+            include/aw/tpl/threading/tasks/detail/completion_awaiter.hpp
+            include/aw/tpl/threading/tasks/detail/final_awaiter.hpp
+            include/aw/tpl/threading/tasks/detail/initial_schedule_awaiter.hpp
+            include/aw/tpl/threading/tasks/detail/is_truly_copyable.hpp
+            include/aw/tpl/threading/tasks/detail/promise.hpp
+            include/aw/tpl/threading/tasks/detail/promise_base.hpp
+            include/aw/tpl/threading/tasks/detail/promise_void.hpp
+            include/aw/tpl/threading/tasks/detail/run_async.hpp
+            include/aw/tpl/threading/tasks/detail/task_state.hpp
+            include/aw/tpl/threading/tasks/detail/task_state_base.hpp
+            include/aw/tpl/threading/tasks/detail/when_all_element.hpp
+            include/aw/tpl/threading/tasks/detail/when_all_settled.hpp
+            include/aw/tpl/threading/tasks/detail/when_any_awaiter.hpp
+            include/aw/tpl/threading/tasks/detail/when_any_state.hpp
+            include/aw/tpl/threading/tasks/detail/when_any_watcher.hpp
 )
 
 target_link_libraries(aw_tpl PUBLIC Threads::Threads)

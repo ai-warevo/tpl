@@ -1,5 +1,6 @@
 #include <catch2/catch_test_macros.hpp>
 #include <aw/tpl/tpl.hpp>
+#include <aw/tpl/threading/detail/pool_scheduling.hpp>
 
 #include <atomic>
 #include <chrono>
@@ -8,15 +9,12 @@
 
 using namespace std::chrono_literals;
 using namespace aw::tpl;
+using namespace aw::tpl::threading;
 using namespace aw::tpl::threading::tasks;
 
 namespace {
 
-struct CurrentPoolGuard {
-    ThreadPool* previous;
-    explicit CurrentPoolGuard(ThreadPool* p) : previous(detail::current_pool) { detail::current_pool = p; }
-    ~CurrentPoolGuard() { detail::current_pool = previous; }
-};
+using CurrentPoolGuard = threading::detail::CurrentPoolScope;
 
 // Polls `pred` every millisecond until it holds or `timeout` elapses.
 template <typename Pred>
@@ -81,7 +79,7 @@ TEST_CASE("async_sleep falls back to global pool when awaited from non-pool thre
     std::atomic<bool> done{false};
     int result = 0;
 
-    // Call from a raw std::thread where detail::current_pool is nullptr
+    // Call from a raw std::thread where current_pool() is nullptr
     std::thread external_thread([&]() {
         auto sleeper = []() -> Task<int> {
             co_await async_sleep(15ms);
@@ -273,13 +271,13 @@ namespace {
 struct ScheduleOnPoolAwaiter {
     ThreadPool* target;
     bool await_ready() const noexcept { return false; }
-    void await_suspend(std::coroutine_handle<> h) const { detail::schedule_on_pool(target, h); }
+    void await_suspend(std::coroutine_handle<> h) const { threading::detail::schedule_on_pool(target, h); }
     void await_resume() const noexcept {}
 };
 
 Task<ThreadPool*> hop_to(ThreadPool* target) {
     co_await ScheduleOnPoolAwaiter{target};
-    co_return detail::current_pool;
+    co_return threading::detail::current_pool();
 }
 
 } // namespace
@@ -294,5 +292,5 @@ TEST_CASE("schedule_on_pool targets the given pool", "[thread_pool][affinity]") 
         REQUIRE(resumed_on != nullptr);
         REQUIRE(resumed_on != &pool);
     }
-    REQUIRE(detail::current_pool == nullptr);
+    REQUIRE(threading::detail::current_pool() == nullptr);
 }

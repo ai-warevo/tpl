@@ -10,6 +10,7 @@
 
 using namespace std::chrono_literals;
 using namespace aw::tpl;
+using namespace aw::tpl::threading;
 using namespace aw::tpl::threading::tasks;
 
 Task<std::string> fetch_from_server(std::string name, std::chrono::milliseconds latency, CancellationToken token) {

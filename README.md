@@ -36,6 +36,20 @@ FetchContent_MakeAvailable(aw_tpl)
 target_link_libraries(your_target PRIVATE aw::tpl)
 ```
 
+## 🗂️ Project Layout (mirrors .NET)
+
+Namespaces map 1:1 to directories (`include/aw/tpl/...` and `src/...`), with roughly one public entity per header:
+
+| C++ namespace / directory | .NET namespace | Contents |
+| --- | --- | --- |
+| `aw::tpl` — `aw/tpl/` | `System` | `OperationCanceledException`, `TimeoutException` |
+| `aw::tpl::threading` — `aw/tpl/threading/` | `System.Threading` | `ThreadPool`, `CancellationToken`, `CancellationTokenSource` |
+| `aw::tpl::threading::tasks` — `aw/tpl/threading/tasks/` | `System.Threading.Tasks` | `Task<T>`, `Task<void>`, `TaskAlreadyMovedException`, `when_all`, `when_any`, `async_sleep` (`Task.Delay`) |
+| `*::detail` — `*/detail/` | *(internal)* | task state, promises, awaiters, scheduling helpers, cancellation state — not part of the public API |
+
+Include `<aw/tpl/tpl.hpp>` for everything, or individual headers such as `<aw/tpl/threading/tasks/task.hpp>`.
+Non-template code lives in `src/`, mirroring the header tree.
+
 ## 🚀 Quick Start
 
 ```cpp
@@ -44,6 +58,7 @@ target_link_libraries(your_target PRIVATE aw::tpl)
 
 using namespace std::chrono_literals;
 using namespace aw::tpl;
+using namespace aw::tpl::threading;
 using namespace aw::tpl::threading::tasks;
 
 Task<int> compute_async(int x, CancellationToken token) {

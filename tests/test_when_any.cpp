@@ -1,6 +1,9 @@
 #include <catch2/catch_test_macros.hpp>
-#include <aw/tpl/cancellation.hpp>
-#include <aw/tpl/when_any.hpp>
+#include <aw/tpl/threading/cancellation_token.hpp>
+#include <aw/tpl/threading/cancellation_token_source.hpp>
+#include <aw/tpl/threading/tasks/async_sleep.hpp>
+#include <aw/tpl/operation_canceled_exception.hpp>
+#include <aw/tpl/threading/tasks/when_any.hpp>
 
 #include <chrono>
 #include <thread>
@@ -12,6 +15,7 @@
 
 using namespace std::chrono_literals;
 using namespace aw::tpl;
+using namespace aw::tpl::threading;
 using namespace aw::tpl::threading::tasks;
 
 namespace {
@@ -178,10 +182,10 @@ TEST_CASE("when_any handles winning Task<void> and concurrent completion races",
 }
 
 TEST_CASE("WhenAnyAwaiter await_suspend returns caller handle when already completed", "[when_any][race]") {
-    auto state = std::make_shared<detail::WhenAnyState>();
+    auto state = std::make_shared<threading::tasks::detail::WhenAnyState>();
     state->completed.store(true, std::memory_order_release);
 
-    detail::WhenAnyAwaiter awaiter{state};
+    threading::tasks::detail::WhenAnyAwaiter awaiter{state};
     auto caller = std::noop_coroutine();
     REQUIRE(awaiter.await_suspend(caller) == caller);
 }
@@ -208,6 +212,6 @@ TEST_CASE("when_any does not consume a move-only result of the winner", "[when_a
 }
 
 TEST_CASE("WhenAnyAwaiter::await_suspend is not noexcept", "[when_any][noexcept]") {
-    static_assert(!noexcept(std::declval<detail::WhenAnyAwaiter&>().await_suspend(std::noop_coroutine())));
+    static_assert(!noexcept(std::declval<threading::tasks::detail::WhenAnyAwaiter&>().await_suspend(std::noop_coroutine())));
     SUCCEED();
 }

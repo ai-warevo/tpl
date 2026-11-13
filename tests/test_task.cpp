@@ -1,6 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <aw/tpl/threading/tasks/task.hpp>
-#include <aw/tpl/when_all.hpp>
+#include <aw/tpl/threading/tasks/when_all.hpp>
+#include <aw/tpl/threading/tasks/async_sleep.hpp>
 
 #include <atomic>
 #include <chrono>
@@ -13,6 +14,7 @@
 
 using namespace std::chrono_literals;
 using namespace aw::tpl;
+using namespace aw::tpl::threading;
 using namespace aw::tpl::threading::tasks;
 
 namespace {
@@ -136,7 +138,7 @@ TEST_CASE("Multiple coroutines can await the same Task", "[task][continuation]")
 }
 
 TEST_CASE("TaskState keeps every attached continuation", "[task][continuation]") {
-    TaskState<int> ts;
+    threading::tasks::detail::TaskState<int> ts;
     REQUIRE_FALSE(ts.is_ready());
 
     // std::noop_coroutine() is a valid, safe no-op coroutine handle in C++20
@@ -153,7 +155,7 @@ TEST_CASE("TaskState keeps every attached continuation", "[task][continuation]")
 // --- New tests for Task 02 ---
 
 TEST_CASE("TaskState::finish returns noop when nobody waits", "[task][state]") {
-    TaskState<void> ts;
+    threading::tasks::detail::TaskState<void> ts;
     REQUIRE_FALSE(ts.is_ready());
 
     // Check that the finish returns noop when no continuations are attached
@@ -166,7 +168,7 @@ TEST_CASE("TaskState::finish returns noop when nobody waits", "[task][state]") {
 }
 
 TEST_CASE("TaskState::finish hands back the first continuation", "[task][state]") {
-    TaskState<int> ts;
+    threading::tasks::detail::TaskState<int> ts;
     std::coroutine_handle<> first_handle = std::noop_coroutine();
     REQUIRE(ts.try_attach_continuation(first_handle));
     
@@ -299,17 +301,17 @@ TEST_CASE("when_all over move-only tasks", "[when_all][move]") {
 }
 
 TEST_CASE("is_truly_copyable looks inside containers", "[task][trait]") {
-    static_assert(!task_detail::is_truly_copyable_v<std::vector<std::unique_ptr<int>>>);
-    static_assert(task_detail::is_truly_copyable_v<std::vector<int>>);
-    static_assert(!task_detail::is_truly_copyable_v<std::optional<std::unique_ptr<int>>>);
-    static_assert(!task_detail::is_truly_copyable_v<std::pair<int, std::unique_ptr<int>>>);
+    static_assert(!threading::tasks::detail::is_truly_copyable_v<std::vector<std::unique_ptr<int>>>);
+    static_assert(threading::tasks::detail::is_truly_copyable_v<std::vector<int>>);
+    static_assert(!threading::tasks::detail::is_truly_copyable_v<std::optional<std::unique_ptr<int>>>);
+    static_assert(!threading::tasks::detail::is_truly_copyable_v<std::pair<int, std::unique_ptr<int>>>);
     SUCCEED();
 }
 
 // --- Tasks 12-13: one-shot extraction ---
 
 TEST_CASE("TaskState::try_take is one-shot", "[task][state]") {
-    TaskState<int> ts;
+    threading::tasks::detail::TaskState<int> ts;
     REQUIRE(ts.try_take());
     REQUIRE_FALSE(ts.try_take());
 }

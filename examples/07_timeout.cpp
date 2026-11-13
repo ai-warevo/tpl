@@ -11,6 +11,7 @@
 
 using namespace std::chrono_literals;
 using namespace aw::tpl;
+using namespace aw::tpl::threading;
 using namespace aw::tpl::threading::tasks;
 
 Task<std::string> long_running_operation(std::chrono::milliseconds duration, CancellationToken token) {

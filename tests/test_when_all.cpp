@@ -1,5 +1,6 @@
 #include <catch2/catch_test_macros.hpp>
-#include <aw/tpl/when_all.hpp>
+#include <aw/tpl/threading/tasks/when_all.hpp>
+#include <aw/tpl/threading/tasks/async_sleep.hpp>
 
 #include <atomic>
 #include <memory>
@@ -12,6 +13,7 @@
 
 using namespace std::chrono_literals;
 using namespace aw::tpl;
+using namespace aw::tpl::threading;
 using namespace aw::tpl::threading::tasks;
 
 namespace {

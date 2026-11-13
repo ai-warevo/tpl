@@ -8,6 +8,7 @@
 #include <vector>
 
 using namespace aw::tpl;
+using namespace aw::tpl::threading;
 using namespace aw::tpl::threading::tasks;
 
 struct MoveOnlyJob {
