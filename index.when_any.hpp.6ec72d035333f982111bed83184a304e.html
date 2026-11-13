@@ -27,7 +27,7 @@
     </tr>
     <tr>
       <th scope="row">Date:</th>
-      <td>2026-11-13 05:49:08</td>
+      <td>2026-11-13 06:01:54</td>
     </tr>
   </table>
 </div>
@@ -41,21 +41,21 @@
     </tr>
     <tr>
       <th scope="row">Lines:</th>
-      <td>17</td>
-      <td>19</td>
-      <td class="coverage-medium">89.5%</td>
+      <td>18</td>
+      <td>18</td>
+      <td class="coverage-high">100.0%</td>
     </tr>
     <tr>
       <th scope="row">Functions:</th>
       <td>14</td>
-      <td>15</td>
-      <td class="coverage-high">93.3%</td>
+      <td>14</td>
+      <td class="coverage-high">100.0%</td>
     </tr>
     <tr>
       <th scope="row">Branches:</th>
-      <td>31</td>
+      <td>32</td>
       <td>66</td>
-      <td class="coverage-low">47.0%</td>
+      <td class="coverage-low">48.5%</td>
     </tr>
   </table>
 </div>
@@ -80,14 +80,14 @@
     <tr><td><a href="#l115">aw::tpl::Task&lt;unsigned long&gt; aw::tpl::when_any&lt;int, void&gt;(aw::tpl::Task&lt;int&gt;, aw::tpl::Task&lt;void&gt;) (line 115)</a></td><td>called 1 time, returned 1 time</td><td>44.0%</td></tr>
     <tr><td><a href="#l63">aw::tpl::detail::WhenAnyAwaiter::await_ready() const (line 63)</a></td><td>called 56 times, returned 56 times</td><td>100.0%</td></tr>
     <tr><td><a href="#l76">aw::tpl::detail::WhenAnyAwaiter::await_resume() const (line 76)</a></td><td>called 56 times, returned 56 times</td><td>100.0%</td></tr>
-    <tr><td><a href="#l67">aw::tpl::detail::WhenAnyAwaiter::await_suspend(std::__n4861::coroutine_handle&lt;void&gt;) (line 67)</a></td><td>called 5 times, returned 5 times</td><td>91.0%</td></tr>
+    <tr><td><a href="#l67">aw::tpl::detail::WhenAnyAwaiter::await_suspend(std::__n4861::coroutine_handle&lt;void&gt;) (line 67)</a></td><td>called 6 times, returned 6 times</td><td>100.0%</td></tr>
     <tr><td><a href="#l36">aw::tpl::detail::WhenAnyWatcher aw::tpl::detail::spawn_when_any_watcher&lt;int&gt;(aw::tpl::Task&lt;int&gt;, unsigned long, std::shared_ptr&lt;aw::tpl::detail::WhenAnyState&gt;) (line 36)</a></td><td>called 107 times, returned 107 times</td><td>58.0%</td></tr>
     <tr><td><a href="#l36">aw::tpl::detail::WhenAnyWatcher aw::tpl::detail::spawn_when_any_watcher&lt;void&gt;(aw::tpl::Task&lt;void&gt;, unsigned long, std::shared_ptr&lt;aw::tpl::detail::WhenAnyState&gt;) (line 36)</a></td><td>called 6 times, returned 6 times</td><td>46.0%</td></tr>
     <tr><td><a href="#l29">aw::tpl::detail::WhenAnyWatcher::promise_type::final_suspend() (line 29)</a></td><td>called 106 times, returned 106 times</td><td>100.0%</td></tr>
     <tr><td><a href="#l27">aw::tpl::detail::WhenAnyWatcher::promise_type::get_return_object() (line 27)</a></td><td>called 113 times, returned 113 times</td><td>100.0%</td></tr>
     <tr><td><a href="#l28">aw::tpl::detail::WhenAnyWatcher::promise_type::initial_suspend() (line 28)</a></td><td>called 113 times, returned 113 times</td><td>100.0%</td></tr>
     <tr><td><a href="#l30">aw::tpl::detail::WhenAnyWatcher::promise_type::return_void() (line 30)</a></td><td>called 106 times, returned 106 times</td><td>100.0%</td></tr>
-    <tr><td><a href="#l31">aw::tpl::detail::WhenAnyWatcher::promise_type::unhandled_exception() (line 31)</a></td><td>not called</td><td>0.0%</td></tr>
+    <tr><td><a href="#l31">aw::tpl::detail::WhenAnyWatcher::promise_type::unhandled_exception() (line 31)</a></td><td>excluded</td><td>0.0%</td></tr>
   </table>
 </details>
 
@@ -316,8 +316,8 @@
       <td class="lineno"><a id="l31" href="#l31">31</a></td>
       <td class="linebranch">
       </td>
-      <td class="linecount uncoveredLine">&cross;</td>
-      <td class="src uncoveredLine"><span class="w">        </span><span class="kt">void</span><span class="w"> </span><span class="nf">unhandled_exception</span><span class="p">()</span><span class="w"> </span><span class="k">noexcept</span><span class="w"> </span><span class="p">{}</span></td>
+      <td class="linecount excludedLine">&minus;</td>
+      <td class="src excludedLine"><span class="w">        </span><span class="kt">void</span><span class="w"> </span><span class="nf">unhandled_exception</span><span class="p">()</span><span class="w"> </span><span class="k">noexcept</span><span class="w"> </span><span class="p">{}</span><span class="w"> </span><span class="c1">// LCOV_EXCL_LINE</span></td>
     </tr>
     <tr class="source-line">
       <td class="lineno"><a id="l32" href="#l32">32</a></td>
@@ -357,12 +357,12 @@
           <div class="notTakenBranch">&cross; Branch 2 not taken.</div>
           <div class="takenBranch">&check; Branch 7 taken 113 times.</div>
           <div class="notTakenBranch">&cross; Branch 8 not taken.</div>
-          <div class="takenBranch">&check; Branch 9 taken 100 times.</div>
-          <div class="takenBranch">&check; Branch 10 taken 13 times.</div>
-          <div class="takenBranch">&check; Branch 12 taken 100 times.</div>
-          <div class="takenBranch">&check; Branch 13 taken 13 times.</div>
-          <div class="takenBranch">&check; Branch 15 taken 100 times.</div>
-          <div class="takenBranch">&check; Branch 16 taken 13 times.</div>
+          <div class="takenBranch">&check; Branch 9 taken 99 times.</div>
+          <div class="takenBranch">&check; Branch 10 taken 14 times.</div>
+          <div class="takenBranch">&check; Branch 12 taken 99 times.</div>
+          <div class="takenBranch">&check; Branch 13 taken 14 times.</div>
+          <div class="takenBranch">&check; Branch 15 taken 99 times.</div>
+          <div class="takenBranch">&check; Branch 16 taken 14 times.</div>
           <div class="notTakenBranch">&cross; Branch 18 not taken.</div>
           <div class="notTakenBranch">&cross; Branch 19 not taken.</div>
           <div class="notTakenBranch">&cross; Branch 21 not taken.</div>
@@ -589,36 +589,36 @@
       <td class="lineno"><a id="l67" href="#l67">67</a></td>
       <td class="linebranch">
       </td>
-      <td class="linecount coveredLine">5</td>
+      <td class="linecount coveredLine">6</td>
       <td class="src coveredLine"><span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="nf">await_suspend</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">coroutine_handle</span><span class="o">&lt;&gt;</span><span class="w"> </span><span class="n">h</span><span class="p">)</span><span class="w"> </span><span class="k">noexcept</span><span class="w"> </span><span class="p">{</span></td>
     </tr>
     <tr class="source-line">
       <td class="lineno"><a id="l68" href="#l68">68</a></td>
       <td class="linebranch">
       </td>
-      <td class="linecount coveredLine">5</td>
+      <td class="linecount coveredLine">6</td>
       <td class="src coveredLine"><span class="w">        </span><span class="n">std</span><span class="o">::</span><span class="n">lock_guard</span><span class="w"> </span><span class="n">lock</span><span class="p">(</span><span class="n">state</span><span class="o">-&gt;</span><span class="n">mtx</span><span class="p">);</span></td>
     </tr>
     <tr class="source-line">
       <td class="lineno"><a id="l69" href="#l69">69</a></td>
       <td class="linebranch">
         <details class="linebranchDetails">
-        <summary class="linebranchSummary">1/2</summary>
+        <summary class="linebranchSummary">2/2</summary>
         <div class="linebranchContents">
-          <div class="notTakenBranch">&cross; Branch 2 not taken.</div>
+          <div class="takenBranch">&check; Branch 2 taken 1 times.</div>
           <div class="takenBranch">&check; Branch 3 taken 5 times.</div>
         </div>
         </details>
       </td>
-      <td class="linecount partialCoveredLine">5</td>
-      <td class="src partialCoveredLine"><span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">state</span><span class="o">-&gt;</span><span class="n">completed</span><span class="p">.</span><span class="n">load</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">memory_order_acquire</span><span class="p">))</span><span class="w"> </span><span class="p">{</span></td>
+      <td class="linecount coveredLine">6</td>
+      <td class="src coveredLine"><span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">state</span><span class="o">-&gt;</span><span class="n">completed</span><span class="p">.</span><span class="n">load</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">memory_order_acquire</span><span class="p">))</span><span class="w"> </span><span class="p">{</span></td>
     </tr>
     <tr class="source-line">
       <td class="lineno"><a id="l70" href="#l70">70</a></td>
       <td class="linebranch">
       </td>
-      <td class="linecount uncoveredLine">&cross;</td>
-      <td class="src uncoveredLine"><span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span></td>
+      <td class="linecount coveredLine">1</td>
+      <td class="src coveredLine"><span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span></td>
     </tr>
     <tr class="source-line">
       <td class="lineno"><a id="l71" href="#l71">71</a></td>
@@ -645,7 +645,7 @@
       <td class="lineno"><a id="l74" href="#l74">74</a></td>
       <td class="linebranch">
       </td>
-      <td class="linecount coveredLine">5</td>
+      <td class="linecount coveredLine">6</td>
       <td class="src coveredLine"><span class="w">    </span><span class="p">}</span></td>
     </tr>
     <tr class="source-line">
@@ -960,17 +960,17 @@
           <div class="notTakenBranch">&cross; Branch 6 not taken.</div>
           <div class="takenBranch">&check; Branch 8 taken 51 times.</div>
           <div class="takenBranch">&check; Branch 9 taken 1 times.</div>
-          <div class="takenBranch">&check; Branch 10 taken 4 times.</div>
-          <div class="takenBranch">&check; Branch 11 taken 47 times.</div>
+          <div class="takenBranch">&check; Branch 10 taken 2 times.</div>
+          <div class="takenBranch">&check; Branch 11 taken 49 times.</div>
           <div class="takenBranch">&check; Branch 12 taken 1 times.</div>
-          <div class="takenBranch">&check; Branch 13 taken 4 times.</div>
-          <div class="takenBranch">&check; Branch 14 taken 47 times.</div>
+          <div class="takenBranch">&check; Branch 13 taken 2 times.</div>
+          <div class="takenBranch">&check; Branch 14 taken 49 times.</div>
           <div class="takenBranch">&check; Branch 15 taken 1 times.</div>
-          <div class="takenBranch">&check; Branch 16 taken 4 times.</div>
-          <div class="takenBranch">&check; Branch 17 taken 47 times.</div>
+          <div class="takenBranch">&check; Branch 16 taken 2 times.</div>
+          <div class="takenBranch">&check; Branch 17 taken 49 times.</div>
           <div class="takenBranch">&check; Branch 18 taken 1 times.</div>
-          <div class="takenBranch">&check; Branch 19 taken 4 times.</div>
-          <div class="takenBranch">&check; Branch 20 taken 47 times.</div>
+          <div class="takenBranch">&check; Branch 19 taken 2 times.</div>
+          <div class="takenBranch">&check; Branch 20 taken 49 times.</div>
           <div class="takenBranch">&check; Branch 21 taken 1 times.</div>
           <div class="notTakenBranch">&cross; Branch 23 not taken.</div>
           <div class="takenBranch">&check; Branch 24 taken 1 times.</div>
