@@ -6,7 +6,7 @@
  */
 
 #include <aw/tpl/thread_pool.hpp>
-#include <aw/tpl/task.hpp>
+#include <aw/tpl/threading/tasks/task.hpp>
 #include <aw/tpl/when_all.hpp>
 #include <aw/tpl/when_any.hpp>
 #include <aw/tpl/cancellation.hpp>

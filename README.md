@@ -44,6 +44,7 @@ target_link_libraries(your_target PRIVATE aw::tpl)
 
 using namespace std::chrono_literals;
 using namespace aw::tpl;
+using namespace aw::tpl::threading::tasks;
 
 Task<int> compute_async(int x, CancellationToken token) {
     co_await async_sleep(300ms, token);

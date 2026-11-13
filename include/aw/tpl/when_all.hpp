@@ -1,6 +1,6 @@
 #pragma once
 
-#include <aw/tpl/task.hpp>
+#include <aw/tpl/threading/tasks/task.hpp>
 
 #include <tuple>
 #include <type_traits>
@@ -34,16 +34,16 @@ using WhenAllElementT = typename WhenAllElement<T>::type;
  * @return Task yielding a @c std::vector<T> of results (or @c Task<void> if @p T is @c void).
  */
 template <typename T>
-auto when_all(std::vector<Task<T>> tasks) {
+auto when_all(std::vector<threading::tasks::Task<T>> tasks) {
     if constexpr (std::is_void_v<T>) {
-        return [](std::vector<Task<void>> list) -> Task<void> {
+        return [](std::vector<threading::tasks::Task<void>> list) -> threading::tasks::Task<void> {
             for (auto& t : list) {
                 co_await t;
             }
             co_return;
         }(std::move(tasks));
     } else {
-        return [](std::vector<Task<T>> list) -> Task<std::vector<T>> {
+        return [](std::vector<threading::tasks::Task<T>> list) -> threading::tasks::Task<std::vector<T>> {
             std::vector<T> results;
             results.reserve(list.size());
             for (auto& t : list) {
@@ -64,14 +64,14 @@ auto when_all(std::vector<Task<T>> tasks) {
  */
 template <typename... Ts>
     requires (sizeof...(Ts) > 0)
-auto when_all(Task<Ts>... tasks) {
+auto when_all(threading::tasks::Task<Ts>... tasks) {
     if constexpr ((std::is_void_v<Ts> && ...)) {
-        std::vector<Task<void>> vec;
+        std::vector<threading::tasks::Task<void>> vec;
         vec.reserve(sizeof...(Ts));
         (vec.push_back(std::move(tasks)), ...);
         return when_all(std::move(vec));
     } else {
-        auto await_one = []<typename T>(Task<T>& t) -> Task<detail::WhenAllElementT<T>> {
+        auto await_one = []<typename T>(threading::tasks::Task<T>& t) -> threading::tasks::Task<detail::WhenAllElementT<T>> {
             if constexpr (std::is_void_v<T>) {
                 co_await t;
                 co_return std::monostate{};
@@ -80,7 +80,7 @@ auto when_all(Task<Ts>... tasks) {
             }
         };
 
-        return [](auto helper, Task<Ts>... list) -> Task<std::tuple<detail::WhenAllElementT<Ts>...>> {
+        return [](auto helper, threading::tasks::Task<Ts>... list) -> threading::tasks::Task<std::tuple<detail::WhenAllElementT<Ts>...>> {
             co_return std::make_tuple((co_await helper(list))...);
         }(await_one, std::move(tasks)...);
     }

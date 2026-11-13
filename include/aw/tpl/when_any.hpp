@@ -1,6 +1,6 @@
 #pragma once
 
-#include <aw/tpl/task.hpp>
+#include <aw/tpl/threading/tasks/task.hpp>
 
 #include <atomic>
 #include <coroutine>
@@ -33,7 +33,7 @@ struct WhenAnyWatcher {
 };
 
 template <typename T>
-WhenAnyWatcher spawn_when_any_watcher(Task<T> task, size_t index, std::shared_ptr<WhenAnyState> state) {
+WhenAnyWatcher spawn_when_any_watcher(threading::tasks::Task<T> task, size_t index, std::shared_ptr<WhenAnyState> state) {
     try {
         if constexpr (std::is_void_v<T>) {
             co_await task;
@@ -89,7 +89,7 @@ struct WhenAnyAwaiter {
  * @throws std::invalid_argument If @p tasks is empty.
  */
 template <typename T>
-Task<Task<T>> when_any(std::vector<Task<T>> tasks) {
+threading::tasks::Task<threading::tasks::Task<T>> when_any(std::vector<threading::tasks::Task<T>> tasks) {
     if (tasks.empty()) {
         throw std::invalid_argument("when_any requires at least one task.");
     }
@@ -112,14 +112,14 @@ Task<Task<T>> when_any(std::vector<Task<T>> tasks) {
  */
 template <typename... Ts>
     requires (sizeof...(Ts) > 0)
-Task<size_t> when_any(Task<Ts>... tasks) {
+threading::tasks::Task<size_t> when_any(threading::tasks::Task<Ts>... tasks) {
     auto state = std::make_shared<detail::WhenAnyState>();
 
     // Move tasks into a tuple to allow indexed access via index_sequence.
     auto task_tuple = std::make_tuple(std::move(tasks)...);
 
     // Use a template lambda to expand the index sequence and spawn watchers deterministically.
-    []<std::size_t... Is>(std::tuple<Task<Ts>...>& t, std::index_sequence<Is...>, auto& s) {
+    []<std::size_t... Is>(std::tuple<threading::tasks::Task<Ts>...>& t, std::index_sequence<Is...>, auto& s) {
         (detail::spawn_when_any_watcher(std::move(std::get<Is>(t)), Is, s), ...);
     }(task_tuple, std::index_sequence_for<Ts...>{}, state);
     co_return co_await detail::WhenAnyAwaiter{state};

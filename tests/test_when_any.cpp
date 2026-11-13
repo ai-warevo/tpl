@@ -7,6 +7,7 @@
 
 using namespace std::chrono_literals;
 using namespace aw::tpl;
+using namespace aw::tpl::threading::tasks;
 
 TEST_CASE("when_any throws on empty vector", "[when_any][exceptions]") {
     std::vector<Task<int>> empty;

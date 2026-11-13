@@ -7,6 +7,7 @@
 
 using namespace std::chrono_literals;
 using namespace aw::tpl;
+using namespace aw::tpl::threading::tasks;
 
 TEST_CASE("ThreadPool handles zero thread count fallback and explicit sizing", "[thread_pool]") {
     ThreadPool::set_default_threads(0); // Should be ignored

@@ -13,6 +13,12 @@ namespace aw::tpl {
 
 class ThreadPool;
 
+namespace threading::tasks {
+
+struct InitialScheduleAwaiter;
+
+} // namespace threading::tasks
+
 namespace detail {
 
 /**
@@ -25,8 +31,6 @@ inline thread_local ThreadPool* current_pool = nullptr;
  * @param[in] h Coroutine handle to enqueue.
  */
 void schedule_on_pool(std::coroutine_handle<> h);
-
-struct InitialScheduleAwaiter;
 
 } // namespace detail
 
@@ -73,7 +77,7 @@ public:
 
 private:
     friend void detail::schedule_on_pool(std::coroutine_handle<> h);
-    friend struct detail::InitialScheduleAwaiter;
+    friend struct threading::tasks::InitialScheduleAwaiter;
     friend auto async_sleep(std::chrono::milliseconds duration);
 
     /**

@@ -26,7 +26,11 @@ target_sources(aw_tpl
         FILES
             include/aw/tpl/tpl.hpp
             include/aw/tpl/thread_pool.hpp
-            include/aw/tpl/task.hpp
+            include/aw/tpl/threading/tasks/task.hpp
+            include/aw/tpl/threading/tasks/task_exceptions.hpp
+            include/aw/tpl/threading/tasks/initial_schedule_awaiter.hpp
+            include/aw/tpl/threading/tasks/task_state.hpp
+            include/aw/tpl/threading/tasks/promise.hpp
             include/aw/tpl/when_all.hpp
             include/aw/tpl/when_any.hpp
             include/aw/tpl/cancellation.hpp

@@ -9,6 +9,7 @@
 
 using namespace std::chrono_literals;
 using namespace aw::tpl;
+using namespace aw::tpl::threading::tasks;
 
 TEST_CASE("when_all handles heterogeneous tasks including void", "[when_all]") {
     auto runner = []() -> Task<void> {

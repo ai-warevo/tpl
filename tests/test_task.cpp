@@ -1,5 +1,5 @@
 #include <catch2/catch_test_macros.hpp>
-#include <aw/tpl/task.hpp>
+#include <aw/tpl/threading/tasks/task.hpp>
 
 #include <chrono>
 #include <memory>
@@ -7,6 +7,7 @@
 
 using namespace std::chrono_literals;
 using namespace aw::tpl;
+using namespace aw::tpl::threading::tasks;
 
 TEST_CASE("Task default construction and already-completed fast paths", "[task]") {
     Task<int> empty_task;
