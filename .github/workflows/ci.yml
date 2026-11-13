@@ -89,3 +89,27 @@ jobs:
         with:
           files: artifacts/*
           generate_release_notes: true
+          body: |
+            ## ⚡ aw::tpl ${{ github.ref_name }}
+
+            C# Task Parallel Library (TPL) ergonomics brought to modern C++20 coroutines.
+
+            ### 📦 Prebuilt SDK Archives
+            Each archive contains `include/`, compiled static library (`lib/`), and CMake package configs (`find_package(aw_tpl REQUIRED)`):
+            * **Windows (MSVC):** `aw_tpl-Windows-MSVC.zip`
+            * **Linux (GCC / Clang):** `aw_tpl-Linux-GCC.tar.gz`, `aw_tpl-Linux-Clang.tar.gz`
+            * **macOS (AppleClang):** `aw_tpl-macOS-AppleClang.tar.gz`
+
+            ### 🚀 Quick CMake Integration (`FetchContent`)
+            ```cmake
+            include(FetchContent)
+            FetchContent_Declare(
+                aw_tpl
+                GIT_REPOSITORY https://github.com/ai-warevo/tpl.git
+                GIT_TAG        \${{ github.ref_name }}
+            )
+            FetchContent_MakeAvailable(aw_tpl)
+            target_link_libraries(your_target PRIVATE aw::tpl)
+            ```
+
+            ---

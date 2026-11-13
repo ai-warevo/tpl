@@ -53,3 +53,11 @@ TEST_CASE("Task<void> and Task<T> propagate exceptions properly", "[task][except
     REQUIRE_THROWS_AS(throw_int().result(), std::logic_error);
     REQUIRE_THROWS_AS(throw_void().wait(), std::runtime_error);
 }
+
+TEST_CASE("Task::run propagates exceptions from throwing lambdas", "[task][run][exceptions]") {
+    auto task = Task<>::run([]() -> int {
+        throw std::runtime_error("lambda boom");
+    });
+
+    REQUIRE_THROWS_AS(task.result(), std::runtime_error);
+}

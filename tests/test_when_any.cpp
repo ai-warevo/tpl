@@ -46,3 +46,12 @@ TEST_CASE("when_any variadic returns exact winner index even on exception", "[wh
 
     REQUIRE(idx == 2);
 }
+
+TEST_CASE("when_any works with vector of Task<void>", "[when_any][void]") {
+    std::vector<Task<void>> tasks;
+    tasks.push_back([]() -> Task<void> { co_await async_sleep(150ms); co_return; }());
+    tasks.push_back([]() -> Task<void> { co_await async_sleep(15ms); co_return; }());
+
+    Task<void> winner = when_any(std::move(tasks)).result();
+    REQUIRE_NOTHROW(winner.wait());
+}

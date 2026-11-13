@@ -92,3 +92,15 @@ TEST_CASE("Cooperative cancellation with FakeIt mock verification", "[cancellati
     Verify(Method(mock, step).Using(11)).Never();
     Verify(Method(mock, on_cancel)).Once();
 }
+
+TEST_CASE("async_sleep with active token completes normally when not canceled", "[cancellation][sleep]") {
+    CancellationTokenSource cts;
+
+    auto normal_sleep = [](CancellationToken t) -> Task<int> {
+        co_await async_sleep(0ms, t);   // Hits duration.count() <= 0
+        co_await async_sleep(20ms, t);  // Completes timer without cancellation
+        co_return 42;
+    };
+
+    REQUIRE(normal_sleep(cts.token()).result() == 42);
+}

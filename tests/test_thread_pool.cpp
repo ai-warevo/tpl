@@ -49,3 +49,7 @@ TEST_CASE("Timer queue orders earlier deadlines ahead of later ones", "[thread_p
     REQUIRE(second_finished == 1);
     REQUIRE(first_finished == 2);
 }
+
+TEST_CASE("ThreadPool global singleton respects configured thread count", "[thread_pool]") {
+    REQUIRE(ThreadPool::global().thread_count() >= 1);
+}
