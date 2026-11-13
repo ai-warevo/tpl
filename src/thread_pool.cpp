@@ -34,11 +34,34 @@ ThreadPool::ThreadPool(size_t thread_count) {
 }
 
 ThreadPool::~ThreadPool() {
-    timer_thread_.request_stop();
+    // Step 1: stop and join the timer thread first (no new timer is consumed after this point).
+    {
+        std::lock_guard lock(timer_mtx_);
+        timer_thread_.request_stop();
+    }
     timer_cv_.notify_all();
+    if (timer_thread_.joinable()) timer_thread_.join();
 
-    for (auto& w : workers_) w.request_stop();
+    // Step 2: flush pending timers into the work queue so suspended coroutines are resumed
+    // instead of being leaked. Entries cannot be added concurrently any more: schedule_after()
+    // sees the stop request under timer_mtx_ and schedules immediately instead.
+    {
+        std::scoped_lock lock(timer_mtx_, queue_mtx_);
+        while (!timers_.empty()) {
+            tasks_.push(timers_.top().handle);
+            timers_.pop();
+        }
+    }
+
+    // Step 3: stop and join the workers; they keep draining the queue until it is empty.
+    {
+        std::lock_guard lock(queue_mtx_);
+        for (auto& w : workers_) w.request_stop();
+    }
     queue_cv_.notify_all();
+    for (auto& w : workers_) {
+        if (w.joinable()) w.join();
+    }
 }
 
 size_t ThreadPool::thread_count() const noexcept {
@@ -48,18 +71,30 @@ size_t ThreadPool::thread_count() const noexcept {
 void ThreadPool::schedule(std::coroutine_handle<> h) {
     {
         std::lock_guard lock(queue_mtx_);
-        tasks_.push(h);
+        // Shutdown path only: once the workers were asked to stop nobody will drain the queue
+        // any more, so the handle must run on the calling thread to avoid being stranded.
+        if (workers_.empty() || !workers_.front().get_stop_token().stop_requested()) {
+            tasks_.push(h);
+            queue_cv_.notify_one();
+            return;
+        }
     }
-    queue_cv_.notify_one();
+    h.resume();
 }
 
 void ThreadPool::schedule_after(std::coroutine_handle<> h, std::chrono::milliseconds duration) {
     auto wake_time = std::chrono::steady_clock::now() + duration;
     {
         std::lock_guard lock(timer_mtx_);
-        timers_.push({wake_time, h});
+        // The check and the push share one lock so no entry can be added after the final flush
+        // performed by the destructor.
+        if (!timer_thread_.get_stop_token().stop_requested()) {
+            timers_.push({wake_time, h});
+            timer_cv_.notify_one();
+            return;
+        }
     }
-    timer_cv_.notify_one();
+    schedule(h);
 }
 
 void ThreadPool::worker_loop(std::stop_token st) {
@@ -68,12 +103,13 @@ void ThreadPool::worker_loop(std::stop_token st) {
         ~PoolGuard() noexcept { detail::current_pool = nullptr; }
     } guard{this};
 
-    while (!st.stop_requested()) {
+    for (;;) {
         std::coroutine_handle<> task;
         {
             std::unique_lock lock(queue_mtx_);
             queue_cv_.wait(lock, [&] { return st.stop_requested() || !tasks_.empty(); });
 
+            // Keep draining queued work after a stop request; leave only when nothing is left.
             if (st.stop_requested() && tasks_.empty()) return;
 
             task = tasks_.front();

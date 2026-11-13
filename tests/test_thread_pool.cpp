@@ -130,3 +130,79 @@ TEST_CASE("ThreadPool destructor cleanly aborts timer_loop during wait_until", "
     }
     SUCCEED();
 }
+
+// --- Pool shutdown (tasks 04-06) ---
+
+namespace {
+
+struct CurrentPoolGuard {
+    ThreadPool* previous;
+    explicit CurrentPoolGuard(ThreadPool* p) : previous(detail::current_pool) { detail::current_pool = p; }
+    ~CurrentPoolGuard() { detail::current_pool = previous; }
+};
+
+Task<void> sleep_then_bump(std::chrono::milliseconds d, std::atomic<int>& counter) {
+    co_await async_sleep(d);
+    ++counter;
+}
+
+Task<int> sleep_twice_return(int v) {
+    co_await async_sleep(5000ms);
+    co_await async_sleep(5000ms);
+    co_return v;
+}
+
+Task<int> sleep_return(int v) {
+    co_await async_sleep(5000ms);
+    co_return v;
+}
+
+} // namespace
+
+TEST_CASE("ThreadPool can be created and destroyed repeatedly with pending work", "[thread_pool][dtor][stress]") {
+    std::atomic<int> counter{0};
+    for (int i = 0; i < 300; ++i) {
+        ThreadPool pool(2);
+        CurrentPoolGuard guard(&pool);
+        auto long_task = sleep_then_bump(10s, counter);
+        auto short_task = sleep_then_bump(1ms, counter);
+        (void)long_task;
+        (void)short_task;
+    }
+    SUCCEED();
+}
+
+TEST_CASE("Pool destruction resumes coroutines suspended on timers", "[thread_pool][dtor][flush]") {
+    Task<int> task;
+    {
+        ThreadPool pool(1);
+        CurrentPoolGuard guard(&pool);
+        task = sleep_return(5);
+        std::this_thread::sleep_for(30ms); // let the coroutine reach its timer
+    }
+    REQUIRE(task.result() == 5);
+}
+
+TEST_CASE("Pool destruction drains queued work", "[thread_pool][dtor][flush]") {
+    std::atomic<int> counter{0};
+    std::vector<Task<void>> tasks;
+    {
+        ThreadPool pool(1);
+        CurrentPoolGuard guard(&pool);
+        for (int i = 0; i < 100; ++i) {
+            tasks.push_back(sleep_then_bump(0ms, counter));
+        }
+    }
+    REQUIRE(counter.load() == 100);
+}
+
+TEST_CASE("Sleep started during shutdown completes immediately", "[thread_pool][dtor]") {
+    Task<int> task;
+    {
+        ThreadPool pool(1);
+        CurrentPoolGuard guard(&pool);
+        task = sleep_twice_return(9);
+        std::this_thread::sleep_for(30ms);
+    }
+    REQUIRE(task.result() == 9);
+}
