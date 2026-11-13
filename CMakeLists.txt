@@ -13,6 +13,7 @@ find_package(Threads REQUIRED)
 
 add_library(aw_tpl STATIC
     src/thread_pool.cpp
+    src/cancellation.cpp
 )
 add_library(aw::tpl ALIAS aw_tpl)
 

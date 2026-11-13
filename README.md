@@ -3,7 +3,7 @@
 [![CI](https://github.com/ai-warevo/tpl/actions/workflows/ci.yml/badge.svg)](https://github.com/ai-warevo/tpl/actions/workflows/ci.yml)
 <br />
 [![Tests & Coverage](https://github.com/ai-warevo/tpl/actions/workflows/test.yml/badge.svg)](https://github.com/ai-warevo/tpl/actions/workflows/test.yml)
-[![Coverage](https://raw.githubusercontent.com/ai-warevo/tpl/refs/heads/badges/demo_coverage.svg)](https://ai-warevo.github.io/tpl)
+[![Coverage](https://raw.githubusercontent.com/ai-warevo/tpl/refs/heads/badges/coverage.svg)](https://ai-warevo.github.io/tpl)
 <br />
 [![C++20](https://img.shields.io/badge/C++-%2300599C.svg?logo=c%2B%2B&logoColor=white)](https://cppreference.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
