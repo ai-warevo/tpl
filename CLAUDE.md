@@ -45,7 +45,7 @@ make release-dry-run                              # picks the right script per O
 make release [PUSH=1]
 ```
 
-They print the detected categories and next `vX.Y.Z`, then promote `[Unreleased]` to `## [X.Y.Z] - <today>` (empty categories dropped, compare links updated, file's LF/CRLF endings kept), commit **only** `CHANGELOG.md` as `release vX.Y.Z`, and create the annotated tag `vX.Y.Z`. They refuse to run with an empty `[Unreleased]`, an existing tag, staged changes, or other uncommitted tracked files. `--push`/`-Push` runs `git push --atomic $RELEASE_REMOTE(origin) HEAD refs/tags/vX.Y.Z`; pushing the tag is what triggers the GitHub release. `CMakeLists.txt` `project(VERSION)` is **not** bumped by the scripts.
+They print the detected categories and next `vX.Y.Z`, then promote `[Unreleased]` to `## [X.Y.Z] - <today>` (empty categories dropped, compare links updated, file's LF/CRLF endings kept), write the bare `X.Y.Z` (no `v`, trailing newline) to the root `VERSION` file, commit **only** `CHANGELOG.md` + `VERSION` as `release vX.Y.Z`, and create the annotated tag `vX.Y.Z`. They refuse to run with an empty `[Unreleased]`, an existing tag, staged changes, or uncommitted tracked files other than those two. `--push`/`-Push` runs `git push --atomic $RELEASE_REMOTE(origin) HEAD refs/tags/vX.Y.Z`; pushing the tag is what triggers the GitHub release. `VERSION` is the single source of the version: `CMakeLists.txt` reads it with `file(READ ...)` into `project(tpl VERSION ...)` (and re-configures when it changes), so never hard-code the version in CMake or edit `VERSION` by hand outside a release.
 
 ## Testing discipline
 

@@ -1,5 +1,9 @@
 cmake_minimum_required(VERSION 3.23)
-project(tpl VERSION 1.0.0 LANGUAGES CXX)
+# Single source of truth for the version; written by scripts/release.sh / release.ps1.
+file(READ "${CMAKE_CURRENT_LIST_DIR}/VERSION" AW_TPL_VERSION)
+string(STRIP "${AW_TPL_VERSION}" AW_TPL_VERSION)
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${CMAKE_CURRENT_LIST_DIR}/VERSION")
+project(tpl VERSION ${AW_TPL_VERSION} LANGUAGES CXX)
 
 if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
     set(AW_TPL_IS_TOP_LEVEL ON)

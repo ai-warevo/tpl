@@ -7,8 +7,8 @@
       Breaking, Removed          -> major
       Added, Deprecated          -> minor
       Fixed, Changed, Security   -> patch
-    Then promotes [Unreleased] to "## [X.Y.Z] - <today>", updates the compare links, commits CHANGELOG.md as
-    "release vX.Y.Z" and creates the annotated tag vX.Y.Z. Pushing the tag triggers the GitHub release workflow.
+    Then promotes [Unreleased] to "## [X.Y.Z] - <today>", updates the compare links, writes X.Y.Z to VERSION (read by
+    CMakeLists.txt), commits CHANGELOG.md + VERSION as "release vX.Y.Z" and creates the annotated tag vX.Y.Z. Pushing the tag triggers the GitHub release workflow.
 
 .PARAMETER Push
     Also push the current branch and the new tag (atomically) to $env:RELEASE_REMOTE (default: origin).
@@ -49,6 +49,7 @@ $root = (Get-GitOutput rev-parse --show-toplevel | Select-Object -First 1)
 Set-Location $root
 
 $changelog = 'CHANGELOG.md'
+$versionFile = 'VERSION'
 $remote = if ($env:RELEASE_REMOTE) { $env:RELEASE_REMOTE } else { 'origin' }
 if (-not (Test-Path -LiteralPath $changelog)) { Fail "$changelog not found" }
 
@@ -146,8 +147,8 @@ if ($LASTEXITCODE -eq 0) { Fail "tag $tag already exists" }
 & git diff --quiet --cached
 if ($LASTEXITCODE -ne 0) { Fail 'the index has staged changes; commit or unstage them first' }
 
-$others = @(Get-GitOutput status --porcelain --untracked-files=no | Where-Object { $_.Substring(3).Trim('"') -ne $changelog })
-if ($others.Count -gt 0) { Fail "working tree has uncommitted changes besides ${changelog}:`n$($others -join "`n")" }
+$others = @(Get-GitOutput status --porcelain --untracked-files=no | Where-Object { $_.Substring(3).Trim('"') -notin @($changelog, $versionFile) })
+if ($others.Count -gt 0) { Fail "working tree has uncommitted changes besides $changelog and ${versionFile}:`n$($others -join "`n")" }
 
 # Build the promoted section: "## [X.Y.Z] - date" followed by every non-empty category.
 $section = [System.Collections.Generic.List[string]]::new()
@@ -184,8 +185,10 @@ $newline = if ($crlf) { "`r`n" } else { "`n" }
 $text = ($result -join $newline) + $newline
 [System.IO.File]::WriteAllText((Join-Path $root $changelog), $text, (New-Object System.Text.UTF8Encoding($false)))
 
-Invoke-Git add -- $changelog
-Invoke-Git commit -m "release $tag" -- $changelog
+[System.IO.File]::WriteAllText((Join-Path $root $versionFile), "$version`n", (New-Object System.Text.UTF8Encoding($false)))
+
+Invoke-Git add -- $changelog $versionFile
+Invoke-Git commit -m "release $tag" -- $changelog $versionFile
 Invoke-Git tag -a $tag -m "release $tag"
 Write-Host "Created commit and annotated tag $tag."
 
