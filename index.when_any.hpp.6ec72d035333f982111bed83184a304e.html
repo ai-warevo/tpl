@@ -27,7 +27,7 @@
     </tr>
     <tr>
       <th scope="row">Date:</th>
-      <td>2026-11-13 08:09:09</td>
+      <td>2026-11-13 13:10:07</td>
     </tr>
   </table>
 </div>
@@ -53,9 +53,9 @@
     </tr>
     <tr>
       <th scope="row">Branches:</th>
-      <td>33</td>
+      <td>36</td>
       <td>65</td>
-      <td class="coverage-low">50.8%</td>
+      <td class="coverage-low">55.4%</td>
     </tr>
   </table>
 </div>
@@ -73,21 +73,21 @@
       <th>Call count</th>
       <th>Block coverage</th>
     </tr>
-    <tr><td><a href="#l92">aw::tpl::Task&lt;aw::tpl::Task&lt;int&gt; &gt; aw::tpl::when_any&lt;int&gt;(std::vector&lt;aw::tpl::Task&lt;int&gt;, std::allocator&lt;aw::tpl::Task&lt;int&gt; &gt; &gt;) (line 92)</a></td><td>called 3 times, returned 3 times</td><td>46.0%</td></tr>
-    <tr><td><a href="#l92">aw::tpl::Task&lt;aw::tpl::Task&lt;void&gt; &gt; aw::tpl::when_any&lt;void&gt;(std::vector&lt;aw::tpl::Task&lt;void&gt;, std::allocator&lt;aw::tpl::Task&lt;void&gt; &gt; &gt;) (line 92)</a></td><td>called 2 times, returned 2 times</td><td>46.0%</td></tr>
-    <tr><td><a href="#l115">aw::tpl::Task&lt;unsigned long&gt; aw::tpl::when_any&lt;int, int&gt;(aw::tpl::Task&lt;int&gt;, aw::tpl::Task&lt;int&gt;) (line 115)</a></td><td>called 50 times, returned 50 times</td><td>44.0%</td></tr>
-    <tr><td><a href="#l115">aw::tpl::Task&lt;unsigned long&gt; aw::tpl::when_any&lt;int, void, int&gt;(aw::tpl::Task&lt;int&gt;, aw::tpl::Task&lt;void&gt;, aw::tpl::Task&lt;int&gt;) (line 115)</a></td><td>called 1 time, returned 1 time</td><td>42.0%</td></tr>
-    <tr><td><a href="#l115">aw::tpl::Task&lt;unsigned long&gt; aw::tpl::when_any&lt;int, void&gt;(aw::tpl::Task&lt;int&gt;, aw::tpl::Task&lt;void&gt;) (line 115)</a></td><td>called 1 time, returned 1 time</td><td>44.0%</td></tr>
     <tr><td><a href="#l63">aw::tpl::detail::WhenAnyAwaiter::await_ready() const (line 63)</a></td><td>called 56 times, returned 56 times</td><td>100.0%</td></tr>
     <tr><td><a href="#l76">aw::tpl::detail::WhenAnyAwaiter::await_resume() const (line 76)</a></td><td>called 56 times, returned 56 times</td><td>100.0%</td></tr>
     <tr><td><a href="#l67">aw::tpl::detail::WhenAnyAwaiter::await_suspend(std::__n4861::coroutine_handle&lt;void&gt;) (line 67)</a></td><td>called 6 times, returned 6 times</td><td>100.0%</td></tr>
-    <tr><td><a href="#l36">aw::tpl::detail::WhenAnyWatcher aw::tpl::detail::spawn_when_any_watcher&lt;int&gt;(aw::tpl::Task&lt;int&gt;, unsigned long, std::shared_ptr&lt;aw::tpl::detail::WhenAnyState&gt;) (line 36)</a></td><td>called 107 times, returned 107 times</td><td>58.0%</td></tr>
-    <tr><td><a href="#l36">aw::tpl::detail::WhenAnyWatcher aw::tpl::detail::spawn_when_any_watcher&lt;void&gt;(aw::tpl::Task&lt;void&gt;, unsigned long, std::shared_ptr&lt;aw::tpl::detail::WhenAnyState&gt;) (line 36)</a></td><td>called 6 times, returned 6 times</td><td>46.0%</td></tr>
+    <tr><td><a href="#l36">aw::tpl::detail::WhenAnyWatcher aw::tpl::detail::spawn_when_any_watcher&lt;int&gt;(aw::tpl::threading::tasks::Task&lt;int&gt;, unsigned long, std::shared_ptr&lt;aw::tpl::detail::WhenAnyState&gt;) (line 36)</a></td><td>called 107 times, returned 107 times</td><td>58.0%</td></tr>
+    <tr><td><a href="#l36">aw::tpl::detail::WhenAnyWatcher aw::tpl::detail::spawn_when_any_watcher&lt;void&gt;(aw::tpl::threading::tasks::Task&lt;void&gt;, unsigned long, std::shared_ptr&lt;aw::tpl::detail::WhenAnyState&gt;) (line 36)</a></td><td>called 6 times, returned 6 times</td><td>46.0%</td></tr>
     <tr><td><a href="#l29">aw::tpl::detail::WhenAnyWatcher::promise_type::final_suspend() (line 29)</a></td><td>called 106 times, returned 106 times</td><td>100.0%</td></tr>
     <tr><td><a href="#l27">aw::tpl::detail::WhenAnyWatcher::promise_type::get_return_object() (line 27)</a></td><td>called 113 times, returned 113 times</td><td>100.0%</td></tr>
     <tr><td><a href="#l28">aw::tpl::detail::WhenAnyWatcher::promise_type::initial_suspend() (line 28)</a></td><td>called 113 times, returned 113 times</td><td>100.0%</td></tr>
     <tr><td><a href="#l30">aw::tpl::detail::WhenAnyWatcher::promise_type::return_void() (line 30)</a></td><td>called 106 times, returned 106 times</td><td>100.0%</td></tr>
     <tr><td><a href="#l31">aw::tpl::detail::WhenAnyWatcher::promise_type::unhandled_exception() (line 31)</a></td><td>excluded</td><td>0.0%</td></tr>
+    <tr><td><a href="#l92">aw::tpl::threading::tasks::Task&lt;aw::tpl::threading::tasks::Task&lt;int&gt; &gt; aw::tpl::when_any&lt;int&gt;(std::vector&lt;aw::tpl::threading::tasks::Task&lt;int&gt;, std::allocator&lt;aw::tpl::threading::tasks::Task&lt;int&gt; &gt; &gt;) (line 92)</a></td><td>called 3 times, returned 3 times</td><td>46.0%</td></tr>
+    <tr><td><a href="#l92">aw::tpl::threading::tasks::Task&lt;aw::tpl::threading::tasks::Task&lt;void&gt; &gt; aw::tpl::when_any&lt;void&gt;(std::vector&lt;aw::tpl::threading::tasks::Task&lt;void&gt;, std::allocator&lt;aw::tpl::threading::tasks::Task&lt;void&gt; &gt; &gt;) (line 92)</a></td><td>called 2 times, returned 2 times</td><td>46.0%</td></tr>
+    <tr><td><a href="#l115">aw::tpl::threading::tasks::Task&lt;unsigned long&gt; aw::tpl::when_any&lt;int, int&gt;(aw::tpl::threading::tasks::Task&lt;int&gt;, aw::tpl::threading::tasks::Task&lt;int&gt;) (line 115)</a></td><td>called 50 times, returned 50 times</td><td>56.0%</td></tr>
+    <tr><td><a href="#l115">aw::tpl::threading::tasks::Task&lt;unsigned long&gt; aw::tpl::when_any&lt;int, void, int&gt;(aw::tpl::threading::tasks::Task&lt;int&gt;, aw::tpl::threading::tasks::Task&lt;void&gt;, aw::tpl::threading::tasks::Task&lt;int&gt;) (line 115)</a></td><td>called 1 time, returned 1 time</td><td>42.0%</td></tr>
+    <tr><td><a href="#l115">aw::tpl::threading::tasks::Task&lt;unsigned long&gt; aw::tpl::when_any&lt;int, void&gt;(aw::tpl::threading::tasks::Task&lt;int&gt;, aw::tpl::threading::tasks::Task&lt;void&gt;) (line 115)</a></td><td>called 1 time, returned 1 time</td><td>44.0%</td></tr>
   </table>
 </details>
 
@@ -121,7 +121,7 @@
       <td class="linebranch">
       </td>
       <td class="linecount "></td>
-      <td class="src "><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;aw/tpl/task.hpp&gt;</span></td>
+      <td class="src "><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;aw/tpl/threading/tasks/task.hpp&gt;</span></td>
     </tr>
     <tr class="source-line">
       <td class="lineno"><a id="l4" href="#l4">4</a></td>
@@ -371,7 +371,7 @@
         </details>
       </td>
       <td class="linecount partialCoveredLine">452</td>
-      <td class="src partialCoveredLine"><span class="n">WhenAnyWatcher</span><span class="w"> </span><span class="n">spawn_when_any_watcher</span><span class="p">(</span><span class="n">Task</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span><span class="w"> </span><span class="n">task</span><span class="p">,</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">index</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">WhenAnyState</span><span class="o">&gt;</span><span class="w"> </span><span class="n">state</span><span class="p">)</span><span class="w"> </span><span class="p">{</span></td>
+      <td class="src partialCoveredLine"><span class="n">WhenAnyWatcher</span><span class="w"> </span><span class="n">spawn_when_any_watcher</span><span class="p">(</span><span class="n">threading</span><span class="o">::</span><span class="n">tasks</span><span class="o">::</span><span class="n">Task</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span><span class="w"> </span><span class="n">task</span><span class="p">,</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">index</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">WhenAnyState</span><span class="o">&gt;</span><span class="w"> </span><span class="n">state</span><span class="p">)</span><span class="w"> </span><span class="p">{</span></td>
     </tr>
     <tr class="source-line">
       <td class="lineno"><a id="l37" href="#l37">37</a></td>
@@ -789,7 +789,7 @@
         </details>
       </td>
       <td class="linecount partialCoveredLine">20</td>
-      <td class="src partialCoveredLine"><span class="n">Task</span><span class="o">&lt;</span><span class="n">Task</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">when_any</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">Task</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">tasks</span><span class="p">)</span><span class="w"> </span><span class="p">{</span></td>
+      <td class="src partialCoveredLine"><span class="n">threading</span><span class="o">::</span><span class="n">tasks</span><span class="o">::</span><span class="n">Task</span><span class="o">&lt;</span><span class="n">threading</span><span class="o">::</span><span class="n">tasks</span><span class="o">::</span><span class="n">Task</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">when_any</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">threading</span><span class="o">::</span><span class="n">tasks</span><span class="o">::</span><span class="n">Task</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">tasks</span><span class="p">)</span><span class="w"> </span><span class="p">{</span></td>
     </tr>
     <tr class="source-line">
       <td class="lineno"><a id="l93" href="#l93">93</a></td>
@@ -949,20 +949,20 @@
       <td class="lineno"><a id="l115" href="#l115">115</a></td>
       <td class="linebranch">
         <details class="linebranchDetails">
-        <summary class="linebranchSummary">11/28</summary>
+        <summary class="linebranchSummary">14/28</summary>
         <div class="linebranchContents">
           <div class="takenBranch">&check; Branch 4 taken 51 times.</div>
           <div class="takenBranch">&check; Branch 8 taken 51 times.</div>
-          <div class="takenBranch">&check; Branch 11 taken 51 times.</div>
+          <div class="takenBranch">&check; Branch 11 taken 44 times.</div>
           <div class="takenBranch">&check; Branch 12 taken 1 times.</div>
-          <div class="notTakenBranch">&cross; Branch 13 not taken.</div>
-          <div class="takenBranch">&check; Branch 14 taken 51 times.</div>
+          <div class="takenBranch">&check; Branch 13 taken 7 times.</div>
+          <div class="takenBranch">&check; Branch 14 taken 44 times.</div>
           <div class="takenBranch">&check; Branch 15 taken 1 times.</div>
-          <div class="notTakenBranch">&cross; Branch 16 not taken.</div>
-          <div class="takenBranch">&check; Branch 17 taken 51 times.</div>
+          <div class="takenBranch">&check; Branch 16 taken 7 times.</div>
+          <div class="takenBranch">&check; Branch 17 taken 44 times.</div>
           <div class="takenBranch">&check; Branch 18 taken 1 times.</div>
-          <div class="notTakenBranch">&cross; Branch 19 not taken.</div>
-          <div class="takenBranch">&check; Branch 20 taken 51 times.</div>
+          <div class="takenBranch">&check; Branch 19 taken 7 times.</div>
+          <div class="takenBranch">&check; Branch 20 taken 44 times.</div>
           <div class="takenBranch">&check; Branch 21 taken 1 times.</div>
           <div class="notTakenBranch">&cross; Branch 23 not taken.</div>
           <div class="takenBranch">&check; Branch 24 taken 1 times.</div>
@@ -983,7 +983,7 @@
         </details>
       </td>
       <td class="linecount partialCoveredLine">208</td>
-      <td class="src partialCoveredLine"><span class="n">Task</span><span class="o">&lt;</span><span class="kt">size_t</span><span class="o">&gt;</span><span class="w"> </span><span class="n">when_any</span><span class="p">(</span><span class="n">Task</span><span class="o">&lt;</span><span class="n">Ts</span><span class="o">&gt;</span><span class="p">...</span><span class="w"> </span><span class="n">tasks</span><span class="p">)</span><span class="w"> </span><span class="p">{</span></td>
+      <td class="src partialCoveredLine"><span class="n">threading</span><span class="o">::</span><span class="n">tasks</span><span class="o">::</span><span class="n">Task</span><span class="o">&lt;</span><span class="kt">size_t</span><span class="o">&gt;</span><span class="w"> </span><span class="n">when_any</span><span class="p">(</span><span class="n">threading</span><span class="o">::</span><span class="n">tasks</span><span class="o">::</span><span class="n">Task</span><span class="o">&lt;</span><span class="n">Ts</span><span class="o">&gt;</span><span class="p">...</span><span class="w"> </span><span class="n">tasks</span><span class="p">)</span><span class="w"> </span><span class="p">{</span></td>
     </tr>
     <tr class="source-line">
       <td class="lineno"><a id="l116" href="#l116">116</a></td>
@@ -1032,7 +1032,7 @@
       <td class="linebranch">
       </td>
       <td class="linecount coveredLine">104</td>
-      <td class="src coveredLine"><span class="w">    </span><span class="p">[]</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span><span class="p">...</span><span class="w"> </span><span class="n">Is</span><span class="o">&gt;</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">tuple</span><span class="o">&lt;</span><span class="n">Task</span><span class="o">&lt;</span><span class="n">Ts</span><span class="o">&gt;</span><span class="p">...</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">t</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">index_sequence</span><span class="o">&lt;</span><span class="n">Is</span><span class="p">...</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="k">auto</span><span class="o">&amp;</span><span class="w"> </span><span class="n">s</span><span class="p">)</span><span class="w"> </span><span class="p">{</span></td>
+      <td class="src coveredLine"><span class="w">    </span><span class="p">[]</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span><span class="p">...</span><span class="w"> </span><span class="n">Is</span><span class="o">&gt;</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">tuple</span><span class="o">&lt;</span><span class="n">threading</span><span class="o">::</span><span class="n">tasks</span><span class="o">::</span><span class="n">Task</span><span class="o">&lt;</span><span class="n">Ts</span><span class="o">&gt;</span><span class="p">...</span><span class="o">&gt;&amp;</span><span class="w"> </span><span class="n">t</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">index_sequence</span><span class="o">&lt;</span><span class="n">Is</span><span class="p">...</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="k">auto</span><span class="o">&amp;</span><span class="w"> </span><span class="n">s</span><span class="p">)</span><span class="w"> </span><span class="p">{</span></td>
     </tr>
     <tr class="source-line">
       <td class="lineno"><a id="l123" href="#l123">123</a></td>
