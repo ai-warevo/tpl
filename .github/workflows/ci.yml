@@ -1,0 +1,91 @@
+name: CI & Release
+
+on:
+  push:
+    branches: [ main, master ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main, master ]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build (${{ matrix.name }})
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Windows-MSVC
+            os: windows-latest
+            cc: cl
+            cxx: cl
+          - name: Linux-GCC
+            os: ubuntu-latest
+            cc: gcc
+            cxx: g++
+          - name: Linux-Clang
+            os: ubuntu-latest
+            cc: clang
+            cxx: clang++
+          - name: macOS-AppleClang
+            os: macos-latest
+            cc: clang
+            cxx: clang++
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure & Install CMake
+        env:
+          CC: ${{ matrix.cc }}
+          CXX: ${{ matrix.cxx }}
+        run: |
+          cmake -B build -DCMAKE_BUILD_TYPE=Release -DAW_TPL_BUILD_EXAMPLES=ON -DAW_TPL_BUILD_TESTS=OFF -DCMAKE_INSTALL_PREFIX=install
+          cmake --build build --config Release --parallel
+          cmake --install build --config Release
+
+      - name: Run Demo Example (Windows)
+        if: runner.os == 'Windows'
+        run: .\build\examples\Release\aw_tpl_demo.exe
+
+      - name: Run Demo Example (Unix)
+        if: runner.os != 'Windows'
+        run: ./build/examples/aw_tpl_demo
+
+      - name: Package Artifacts (Windows)
+        if: runner.os == 'Windows'
+        run: Compress-Archive -Path install\* -DestinationPath aw_tpl-${{ matrix.name }}.zip
+
+      - name: Package Artifacts (Unix)
+        if: runner.os != 'Windows'
+        run: tar -czvf aw_tpl-${{ matrix.name }}.tar.gz -C install .
+
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: aw_tpl-${{ matrix.name }}
+          path: aw_tpl-${{ matrix.name }}.*
+
+  release:
+    name: Publish GitHub Release
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/*
+          generate_release_notes: true

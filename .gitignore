@@ -1,0 +1,48 @@
+# Build directories
+build/
+out/
+cmake-build-*/
+
+# CMake generated files
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+CTestTestfile.cmake
+_deps/
+
+# Visual Studio / MSVC
+.vs/
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+*.sln
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.pdb
+*.ilk
+*.ipch
+*.tlog
+
+# IDE & Editors
+.vscode/
+.idea/
+.cache/
+.clangd/
+
+# Compiled binaries & libraries
+*.exe
+*.dll
+*.so
+*.dylib
+*.a
+*.lib
+*.obj
+*.o
+
+# OS specific
+.DS_Store
+Thumbs.db

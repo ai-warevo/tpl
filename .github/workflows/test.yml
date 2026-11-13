@@ -1,0 +1,64 @@
+name: Tests & Coverage
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+permissions:
+  contents: write
+
+jobs:
+  coverage:
+    name: Unit Tests & Coverage
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install gcovr
+        run: sudo apt-get update && sudo apt-get install -y gcovr
+
+      - name: Configure & Build Tests with Coverage
+        env:
+          CC: gcc
+          CXX: g++
+        run: |
+          cmake -B build \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DAW_TPL_BUILD_EXAMPLES=OFF \
+            -DAW_TPL_BUILD_TESTS=ON \
+            -DAW_TPL_ENABLE_COVERAGE=ON
+          cmake --build build --parallel
+
+
+      - name: Run CTest
+        run: ctest --test-dir build --output-on-failure
+
+      - name: Calculate Coverage Percentage
+        id: cov
+        run: |
+          gcovr -r . \
+            --filter "include/aw/tpl/" \
+            --filter "src/" \
+            --exclude-unreachable-branches \
+            --print-summary \
+            --json-summary coverage.json
+          PCT=$(python3 -c "import json; print(round(json.load(open('coverage.json'))['line_percent'], 1))")
+          echo "percent=${PCT}" >> $GITHUB_OUTPUT
+          echo "Total line coverage: ${PCT}%"
+
+      - name: Generate Coverage Badge
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+        uses: schneegans/dynamic-badges-action@v1.7.0
+        with:
+          auth: ${{ secrets.GITHUB_TOKEN }}
+          gistID: "" # Leave empty to store badge JSON in a dedicated 'badges' branch
+          filename: coverage.json
+          label: coverage
+          message: ${{ steps.cov.outputs.percent }}%
+          minColorRange: 80
+          maxColorRange: 100
+          valColorRange: ${{ steps.cov.outputs.percent }}
