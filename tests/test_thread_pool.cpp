@@ -34,20 +34,15 @@ TEST_CASE("Timer queue orders earlier deadlines ahead of later ones", "[thread_p
     int first_finished = 0;
     int second_finished = 0;
 
-    auto long_task = [&]() -> Task<void> {
-        co_await async_sleep(150ms);
-        long_task_done:
-        first_finished = ++order;
+    auto timed_worker = [](std::chrono::milliseconds delay, std::atomic<int>& ord, int& out_pos) -> Task<void> {
+        co_await async_sleep(delay);
+        out_pos = ++ord;
+        co_return;
     };
 
-    auto short_task = [&]() -> Task<void> {
-        co_await async_sleep(30ms);
-        second_finished = ++order;
-    };
-
-    auto t1 = long_task();
+    auto t1 = timed_worker(150ms, order, first_finished);
     std::this_thread::sleep_for(10ms); // Ensure t1 is already sleeping in timer_loop
-    auto t2 = short_task();            // Should wake up timer_cv_ and execute before t1
+    auto t2 = timed_worker(30ms, order, second_finished); // Should wake up timer_cv_ and execute before t1
 
     when_all(t1, t2).wait();
 

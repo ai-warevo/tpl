@@ -1,6 +1,7 @@
 name: Tests & Coverage
 
 on:
+  workflow_dispatch:
   push:
     branches: [ main, master ]
   pull_request:
@@ -10,7 +11,7 @@ permissions:
   contents: write
 
 jobs:
-  coverage:
+  quality-and-tests:
     name: Unit Tests & Coverage
     runs-on: ubuntu-latest
 
@@ -33,32 +34,75 @@ jobs:
             -DAW_TPL_ENABLE_COVERAGE=ON
           cmake --build build --parallel
 
-
       - name: Run CTest
         run: ctest --test-dir build --output-on-failure
 
-      - name: Calculate Coverage Percentage
-        id: cov
+      - name: Generate Coverage Reports (XML & HTML)
         run: |
+          mkdir -p htmlcov
           gcovr -r . \
             --filter "include/aw/tpl/" \
             --filter "src/" \
             --exclude-unreachable-branches \
             --print-summary \
-            --json-summary coverage.json
-          PCT=$(python3 -c "import json; print(round(json.load(open('coverage.json'))['line_percent'], 1))")
-          echo "percent=${PCT}" >> $GITHUB_OUTPUT
-          echo "Total line coverage: ${PCT}%"
+            --xml coverage.xml \
+            --html-details htmlcov/index.html
+
+      - name: Parse Coverage Metrics
+        id: coverage_parser
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+        run: |
+          PERCENTAGE=$(python3 -c "import xml.etree.ElementTree as ET; tree = ET.parse('coverage.xml'); root = tree.getroot(); print(int(float(root.attrib['line-rate']) * 100))")
+          echo "DEBUG: Extracted percentage: '$PERCENTAGE'"
+
+          if [ "$PERCENTAGE" -lt 50 ]; then 
+            COLOR="#e05d44" 
+          elif [ "$PERCENTAGE" -lt 80 ]; then 
+            COLOR="#dfb317" 
+          else 
+            COLOR="#44cc11" 
+          fi
+
+          echo "percent=${PERCENTAGE}%" >> $GITHUB_OUTPUT
+          echo "color=${COLOR}" >> $GITHUB_OUTPUT
 
       - name: Generate Coverage Badge
+        id: badge_generator
         if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
-        uses: schneegans/dynamic-badges-action@v1.7.0
+        uses: my-repositories/gha/badge@main
         with:
-          auth: ${{ secrets.GITHUB_TOKEN }}
-          gistID: "" # Leave empty to store badge JSON in a dedicated 'badges' branch
-          filename: coverage.json
-          label: coverage
-          message: ${{ steps.cov.outputs.percent }}%
-          minColorRange: 80
-          maxColorRange: 100
-          valColorRange: ${{ steps.cov.outputs.percent }}
+          width: '99'
+          height: '20'
+          text_left: 'coverage'
+          text_right: '${{ steps.coverage_parser.outputs.percent }}'
+          bg_color_right: '${{ steps.coverage_parser.outputs.color }}'
+          filename: 'coverage.svg'
+
+      - name: Isolate Badge for Deploy
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+        run: |
+          mkdir -p badge-upload
+          cp "${{ steps.badge_generator.outputs.badge_path }}" badge-upload/coverage.svg
+
+      - name: Deploy Badge to separate branch
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          branch: badges
+          folder: badge-upload
+          target-folder: .
+          git-config-name: "github-actions[bot]"
+          git-config-email: "github-actions[bot]@users.noreply.github.com"
+          single-commit: true
+
+      - name: Preparation for HTML Deploy
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+        run: |
+          touch htmlcov/.nojekyll
+
+      - name: Deploy Coverage Report to gh-pages
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          branch: gh-pages
+          folder: htmlcov
