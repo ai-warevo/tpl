@@ -49,13 +49,23 @@ jobs:
           cmake --build build --config Release --parallel
           cmake --install build --config Release
 
-      - name: Run Demo Example (Windows)
+      - name: Run Examples (Windows)
         if: runner.os == 'Windows'
-        run: .\build\examples\Release\aw_tpl_demo.exe
+        shell: pwsh
+        run: |
+          Get-ChildItem .\build\examples\Release\aw_tpl_example_*.exe | ForEach-Object {
+            Write-Host "=== $($_.Name)"
+            & $_.FullName
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
 
-      - name: Run Demo Example (Unix)
+      - name: Run Examples (Unix)
         if: runner.os != 'Windows'
-        run: ./build/examples/aw_tpl_demo
+        run: |
+          for example in ./build/examples/aw_tpl_example_*; do
+            echo "=== $example"
+            "$example"
+          done
 
       - name: Package Artifacts (Windows)
         if: runner.os == 'Windows'
@@ -78,38 +88,67 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
           path: artifacts
           merge-multiple: true
 
+      - name: Extract release notes from CHANGELOG.md
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          version="${TAG#v}"
+
+          # Body of "## [<version>]" up to the next "## [" heading or the link references; CRLF-safe.
+          notes="$(tr -d '\r' < CHANGELOG.md | awk -v v="$version" '
+            /^## \[/ { if (found) exit; if (index($0, "## [" v "]") == 1) { found = 1; next } }
+            found && /^\[[^]]+\]:/ { exit }
+            found { lines[++n] = $0 }
+            END {
+              first = 1; while (first <= n && lines[first] ~ /^[ \t]*$/) first++
+              while (n >= first && lines[n] ~ /^[ \t]*$/) n--
+              for (i = first; i <= n; i++) print lines[i]
+            }')"
+
+          if [ -z "$notes" ]; then
+            echo "::error::CHANGELOG.md has no entries for [$version]. Run scripts/release.sh (or release.ps1) to cut releases."
+            exit 1
+          fi
+
+          {
+            printf '## ⚡ aw::tpl %s\n\n' "$TAG"
+            printf '%s\n\n' "$notes"
+            cat <<'EOF'
+          ### 📦 Prebuilt SDK Archives
+          Each archive contains `include/`, compiled static library (`lib/`), and CMake package configs (`find_package(aw_tpl REQUIRED)`):
+          * **Windows (MSVC):** `aw_tpl-Windows-MSVC.zip`
+          * **Linux (GCC / Clang):** `aw_tpl-Linux-GCC.tar.gz`, `aw_tpl-Linux-Clang.tar.gz`
+          * **macOS (AppleClang):** `aw_tpl-macOS-AppleClang.tar.gz`
+
+          ### 🚀 Quick CMake Integration (`FetchContent`)
+          ```cmake
+          include(FetchContent)
+          FetchContent_Declare(
+              aw_tpl
+              GIT_REPOSITORY https://github.com/ai-warevo/tpl.git
+          EOF
+            printf '    GIT_TAG        %s\n' "$TAG"
+            cat <<'EOF'
+          )
+          FetchContent_MakeAvailable(aw_tpl)
+          target_link_libraries(your_target PRIVATE aw::tpl)
+          ```
+          EOF
+          } > release_body.md
+
+          cat release_body.md
+
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
           files: artifacts/*
-          generate_release_notes: true
-          body: |
-            ## ⚡ aw::tpl ${{ github.ref_name }}
-
-            C# Task Parallel Library (TPL) ergonomics brought to modern C++20 coroutines.
-
-            ### 📦 Prebuilt SDK Archives
-            Each archive contains `include/`, compiled static library (`lib/`), and CMake package configs (`find_package(aw_tpl REQUIRED)`):
-            * **Windows (MSVC):** `aw_tpl-Windows-MSVC.zip`
-            * **Linux (GCC / Clang):** `aw_tpl-Linux-GCC.tar.gz`, `aw_tpl-Linux-Clang.tar.gz`
-            * **macOS (AppleClang):** `aw_tpl-macOS-AppleClang.tar.gz`
-
-            ### 🚀 Quick CMake Integration (`FetchContent`)
-            ```cmake
-            include(FetchContent)
-            FetchContent_Declare(
-                aw_tpl
-                GIT_REPOSITORY https://github.com/ai-warevo/tpl.git
-                GIT_TAG        ${{ github.ref_name }}
-            )
-            FetchContent_MakeAvailable(aw_tpl)
-            target_link_libraries(your_target PRIVATE aw::tpl)
-            ```
-
-            ---
+          body_path: release_body.md
