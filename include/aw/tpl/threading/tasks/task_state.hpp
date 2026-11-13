@@ -4,6 +4,8 @@
 #include <exception>
 #include <mutex>
 #include <semaphore>
+#include <vector>
+#include <aw/tpl/thread_pool.hpp>
 
 namespace aw::tpl::threading::tasks {
 
@@ -14,7 +16,7 @@ namespace aw::tpl::threading::tasks {
 struct TaskStateBase {
     std::mutex mtx;
     bool ready = false;
-    std::coroutine_handle<> continuation = nullptr;
+    std::vector<std::coroutine_handle<>> continuations;
     std::exception_ptr exception = nullptr;
     std::binary_semaphore done_sem{0};
 
@@ -37,7 +39,7 @@ struct TaskStateBase {
         if (ready) {
             return false;
         }
-        continuation = awaiting;
+        continuations.push_back(awaiting);
         return true;
     }
 
@@ -45,16 +47,45 @@ struct TaskStateBase {
      * @brief Marks the task as finished, releases blocking waiters, and resumes any continuation.
      */
     void complete() {
-        std::coroutine_handle<> cont = nullptr;
+        std::vector<std::coroutine_handle<>> to_resume;
         {
             std::lock_guard lock(mtx);
             ready = true;
-            cont = continuation;
+            to_resume = std::move(continuations);
+            continuations.clear();
         }
         done_sem.release();
-        if (cont) {
+        // Resume all captured continuations outside the lock
+        for (auto& cont : to_resume) {
             cont.resume();
         }
+    }
+
+    /**
+     * @brief Finishes the task state, releasing waiters, and returning the first continuation handle.
+     * @return The first continuation handle, or std::noop_coroutine() if no continuations were attached.
+     */
+    std::coroutine_handle<> finish() {
+        std::vector<std::coroutine_handle<>> to_resume;
+        {
+            std::lock_guard lock(mtx);
+            ready = true;
+            to_resume = std::move(continuations);
+            continuations.clear();
+        }
+        done_sem.release();
+
+        if (to_resume.empty()) {
+            return std::noop_coroutine();
+        }
+
+        // The first continuation is resumed by symmetric transfer, the rest are scheduled on the pool.
+        std::coroutine_handle<> first = to_resume.front();
+        for (size_t i = 1; i < to_resume.size(); ++i) {
+            // Schedule the remaining waiters on the pool
+            ::aw::tpl::detail::schedule_on_pool(to_resume[i]);
+        }
+        return first;
     }
 };
 

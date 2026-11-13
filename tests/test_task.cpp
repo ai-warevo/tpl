@@ -88,3 +88,43 @@ TEST_CASE("Task await_suspend returns caller handle if completed concurrently af
     auto caller = std::noop_coroutine();
     REQUIRE(t.await_suspend(caller) == caller);
 }
+
+TEST_CASE("Multiple coroutines can await the same Task", "[task][continuation]") {
+    auto slow_task = []() -> Task<int> {
+        co_await async_sleep(80ms);
+        co_return 7;
+    }();
+
+    auto consumer = [](Task<int> already_done) -> Task<int> {
+        co_return co_await already_done;
+    };
+
+    // Create copies of the task to simulate multiple consumers
+    auto t1 = slow_task;
+    auto t2 = slow_task;
+    auto t3 = slow_task;
+
+    auto c1 = consumer(t1);
+    auto c2 = consumer(t2);
+    auto c3 = consumer(t3);
+
+    // Wait on all consumers and check results
+    REQUIRE(c1.result() == 7);
+    REQUIRE(c2.result() == 7);
+    REQUIRE(c3.result() == 7);
+}
+
+TEST_CASE("TaskState keeps every attached continuation", "[task][continuation]") {
+    TaskState<int> ts;
+    REQUIRE_FALSE(ts.is_ready());
+
+    // std::noop_coroutine() is a valid, safe no-op coroutine handle in C++20
+    REQUIRE(ts.try_attach_continuation(std::noop_coroutine()));
+    REQUIRE(ts.try_attach_continuation(std::noop_coroutine()));
+
+    ts.complete();
+    REQUIRE(ts.is_ready());
+
+    // Attaching after completion must return false
+    REQUIRE_FALSE(ts.try_attach_continuation(std::noop_coroutine()));
+}
