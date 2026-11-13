@@ -1,17 +1,57 @@
 #pragma once
 
+#include <aw/tpl/thread_pool.hpp>
 #include <aw/tpl/threading/tasks/promise.hpp>
 #include <aw/tpl/threading/tasks/task_exceptions.hpp>
 #include <aw/tpl/threading/tasks/task_state.hpp>
 
+#include <array>
 #include <concepts>
 #include <coroutine>
+#include <deque>
 #include <exception>
+#include <list>
 #include <memory>
+#include <optional>
+#include <stdexcept>
+#include <tuple>
 #include <type_traits>
 #include <utility>
+#include <variant>
+#include <vector>
 
 namespace aw::tpl::threading::tasks {
+
+namespace task_detail {
+
+/**
+ * @brief True if T can really be copied. Unlike std::is_copy_constructible_v this looks inside
+ *        standard containers, so e.g. std::vector<std::unique_ptr<int>> is reported as not copyable.
+ */
+template <typename T>
+struct is_truly_copyable : std::is_copy_constructible<T> {};
+
+template <typename E, typename A>
+struct is_truly_copyable<std::vector<E, A>> : std::bool_constant<is_truly_copyable<E>::value> {};
+template <typename E, typename A>
+struct is_truly_copyable<std::deque<E, A>> : std::bool_constant<is_truly_copyable<E>::value> {};
+template <typename E, typename A>
+struct is_truly_copyable<std::list<E, A>> : std::bool_constant<is_truly_copyable<E>::value> {};
+template <typename E, std::size_t N>
+struct is_truly_copyable<std::array<E, N>> : std::bool_constant<is_truly_copyable<E>::value> {};
+template <typename E>
+struct is_truly_copyable<std::optional<E>> : std::bool_constant<is_truly_copyable<E>::value> {};
+template <typename A, typename B>
+struct is_truly_copyable<std::pair<A, B>> : std::bool_constant<is_truly_copyable<A>::value && is_truly_copyable<B>::value> {};
+template <typename... Es>
+struct is_truly_copyable<std::tuple<Es...>> : std::bool_constant<(is_truly_copyable<Es>::value && ...)> {};
+template <typename... Es>
+struct is_truly_copyable<std::variant<Es...>> : std::bool_constant<(is_truly_copyable<Es>::value && ...)> {};
+
+template <typename T>
+inline constexpr bool is_truly_copyable_v = is_truly_copyable<T>::value;
+
+} // namespace task_detail
 
 /**
  * @class Task
@@ -53,6 +93,9 @@ public:
      * @return @p awaiting if already ready; @c std::noop_coroutine() if suspended.
      */
     std::coroutine_handle<> await_suspend(std::coroutine_handle<> awaiting) noexcept {
+        if (!state_) {
+            return awaiting; // await_resume() will throw std::logic_error
+        }
         if (!state_->try_attach_continuation(awaiting)) {
             return awaiting;
         }
@@ -62,19 +105,45 @@ public:
     /**
      * @brief Returns the task's result or rethrows any captured exception (called by @c co_await).
      * @return Result of type @p T (or void).
+     * @throws std::logic_error If the task has no shared state (default-constructed or moved-from).
+     * @throws TaskAlreadyMovedException If a move-only result was already extracted.
      * @throws Any exception thrown inside the coroutine body.
      */
     T await_resume() const {
+        require_state();
         if (state_->exception) {
             std::rethrow_exception(state_->exception);
         }
         if constexpr (!std::is_void_v<T>) {
-            if constexpr (std::is_copy_constructible_v<T>) {
-                return state_->value;
+            if constexpr (task_detail::is_truly_copyable_v<T>) {
+                return *state_->value;
             } else {
-                return std::move(state_->value);
+                if (!state_->try_take()) {
+                    throw TaskAlreadyMovedException{};
+                }
+                return std::move(*state_->value);
             }
         }
+    }
+
+    /**
+     * @brief Awaitable that only waits for completion: it neither rethrows the task's exception nor
+     *        extracts (moves out) the result. Used by combinators such as @c when_any that must not
+     *        consume a move-only result on behalf of the user.
+     */
+    auto completion() const noexcept {
+        struct CompletionAwaiter {
+            std::shared_ptr<TaskState<T>> state;
+            bool await_ready() const { return !state || state->is_ready(); }
+            std::coroutine_handle<> await_suspend(std::coroutine_handle<> awaiting) {
+                if (!state->try_attach_continuation(awaiting)) {
+                    return awaiting;
+                }
+                return std::noop_coroutine();
+            }
+            void await_resume() const noexcept {}
+        };
+        return CompletionAwaiter{state_};
     }
 
     /**
@@ -91,6 +160,8 @@ public:
      * @brief Synchronously blocks until completion and returns the computed value
      *        (equivalent to C# @c Task<T>.Result). Enabled only for non-void @c Task<T>.
      * @return Result of type @p T.
+     * @throws std::logic_error If the task has no state, or when called on a pool worker for an unfinished task.
+     * @throws TaskAlreadyMovedException If a move-only result was already taken.
      * @throws Any exception thrown inside the coroutine body.
      */
     T result() const requires (!std::is_void_v<T>) {
@@ -122,8 +193,19 @@ private:
     /**
      * @brief Blocks the calling thread on the completion semaphore until the task finishes.
      */
+    void require_state() const {
+        if (!state_) {
+            throw std::logic_error("Task has no shared state (default-constructed or moved-from).");
+        }
+    }
+
     void wait_until_ready() const {
+        require_state();
         if (!state_->is_ready()) {
+            // A pool worker blocking here can starve the pool (guaranteed deadlock on a single worker).
+            if (::aw::tpl::detail::current_pool != nullptr) {
+                throw std::logic_error("Blocking wait on a thread-pool worker would deadlock; use co_await instead.");
+            }
             state_->done_sem.acquire();
             state_->done_sem.release();
         }

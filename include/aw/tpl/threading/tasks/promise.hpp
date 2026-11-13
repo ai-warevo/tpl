@@ -6,6 +6,7 @@
 #include <coroutine>
 #include <exception>
 #include <memory>
+#include <type_traits>
 #include <utility>
 
 namespace aw::tpl::threading::tasks {
@@ -57,9 +58,10 @@ template <typename T>
 struct Promise : PromiseBase<T> {
     Task<T> get_return_object() noexcept;
 
-    template <typename U>
-    void return_value(U&& v) {
-        this->state->value = std::forward<U>(v);
+    static_assert(!std::is_reference_v<T>, "Task<T&> is not supported; return a value or a pointer instead.");
+
+    void return_value(T v) {
+        this->state->value.emplace(std::move(v));
     }
 };
 

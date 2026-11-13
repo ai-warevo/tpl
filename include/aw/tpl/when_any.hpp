@@ -34,15 +34,9 @@ struct WhenAnyWatcher {
 
 template <typename T>
 WhenAnyWatcher spawn_when_any_watcher(threading::tasks::Task<T> task, size_t index, std::shared_ptr<WhenAnyState> state) {
-    try {
-        if constexpr (std::is_void_v<T>) {
-            co_await task;
-        } else {
-            (void)co_await task;
-        }
-    } catch (...) {
-        // A task completing with an exception still counts as completed in WhenAny
-    }
+    // Wait for completion only: a failed task still counts as completed, and a move-only result
+    // must stay available for the caller (the winner is returned as a Task).
+    co_await task.completion();
 
     // The winner index is written BEFORE `completed` is published (release). Readers observe
     // `completed` with acquire (await_ready) or under `mtx` (await_suspend), so they always see

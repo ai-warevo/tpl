@@ -1,10 +1,15 @@
 #include <catch2/catch_test_macros.hpp>
 #include <aw/tpl/threading/tasks/task.hpp>
+#include <aw/tpl/when_all.hpp>
 
 #include <atomic>
 #include <chrono>
 #include <memory>
 #include <stdexcept>
+#include <string>
+#include <thread>
+#include <utility>
+#include <vector>
 
 using namespace std::chrono_literals;
 using namespace aw::tpl;
@@ -199,4 +204,156 @@ TEST_CASE("Long chains of awaiting tasks do not overflow the stack", "[task][cha
     // Symmetric transfer is only guaranteed by GCC with optimisation and without sanitizers.
     REQUIRE(chain_depth(200000).result() == 200000);
 #endif
+}
+
+// --- Task 08: empty state ---
+
+TEST_CASE("Empty and moved-from tasks throw logic_error instead of crashing", "[task][empty]") {
+    REQUIRE_THROWS_AS(Task<int>{}.result(), std::logic_error);
+    REQUIRE_THROWS_AS(Task<void>{}.wait(), std::logic_error);
+
+    auto ready = []() -> Task<int> { co_return 1; }();
+    REQUIRE(ready.result() == 1);
+    Task<int> other = std::move(ready);
+    REQUIRE_THROWS_AS(ready.result(), std::logic_error); // NOLINT(bugprone-use-after-move)
+    REQUIRE(other.result() == 1);
+
+    auto awaiter = [](Task<int> t) -> Task<bool> {
+        try {
+            (void)co_await t;
+        } catch (const std::logic_error&) {
+            co_return true;
+        }
+        co_return false;
+    };
+    REQUIRE(awaiter(Task<int>{}).result());
+}
+
+// --- Tasks 09-11: value storage ---
+
+namespace {
+
+struct NoDefault {
+    explicit NoDefault(int x) : v(x) {}
+    int v;
+};
+
+Task<std::pair<int, int>> make_pair_task() { co_return {3, 4}; }
+Task<NoDefault> make_nodefault_task() { co_return NoDefault{5}; }
+Task<std::string> make_string_task() { co_return "abc"; }
+
+Task<std::vector<std::unique_ptr<int>>> make_ptr_vector() {
+    std::vector<std::unique_ptr<int>> v;
+    v.push_back(std::make_unique<int>(1));
+    v.push_back(std::make_unique<int>(2));
+    co_return v;
+}
+
+Task<std::unique_ptr<int>> make_ptr_task(int v) {
+    co_await async_sleep(5ms);
+    co_return std::make_unique<int>(v);
+}
+
+} // namespace
+
+TEST_CASE("Task result type does not need to be default constructible", "[task][value]") {
+    REQUIRE(make_nodefault_task().result().v == 5);
+}
+
+TEST_CASE("co_return accepts braced initializers and converting values", "[task][value]") {
+    REQUIRE(make_pair_task().result() == std::pair<int, int>{3, 4});
+    REQUIRE(make_string_task().result() == "abc");
+}
+
+TEST_CASE("Task of vector<unique_ptr> is movable out", "[task][move]") {
+    auto v = make_ptr_vector().result();
+    REQUIRE(v.size() == 2);
+    REQUIRE(*v[0] == 1);
+    REQUIRE(*v[1] == 2);
+}
+
+TEST_CASE("when_all over move-only tasks", "[when_all][move]") {
+    std::vector<Task<std::unique_ptr<int>>> tasks;
+    for (int i = 1; i <= 3; ++i) tasks.push_back(make_ptr_task(i * 10));
+    auto results = when_all(std::move(tasks)).result();
+    REQUIRE(results.size() == 3);
+    for (int i = 0; i < 3; ++i) {
+        REQUIRE(results[static_cast<size_t>(i)] != nullptr);
+        REQUIRE(*results[static_cast<size_t>(i)] == (i + 1) * 10);
+    }
+}
+
+TEST_CASE("is_truly_copyable looks inside containers", "[task][trait]") {
+    static_assert(!task_detail::is_truly_copyable_v<std::vector<std::unique_ptr<int>>>);
+    static_assert(task_detail::is_truly_copyable_v<std::vector<int>>);
+    static_assert(!task_detail::is_truly_copyable_v<std::optional<std::unique_ptr<int>>>);
+    static_assert(!task_detail::is_truly_copyable_v<std::pair<int, std::unique_ptr<int>>>);
+    SUCCEED();
+}
+
+// --- Tasks 12-13: one-shot extraction ---
+
+TEST_CASE("TaskState::try_take is one-shot", "[task][state]") {
+    TaskState<int> ts;
+    REQUIRE(ts.try_take());
+    REQUIRE_FALSE(ts.try_take());
+}
+
+TEST_CASE("Second result() of a move-only task throws TaskAlreadyMovedException", "[task][move]") {
+    auto t = make_ptr_task(7);
+    auto first = t.result();
+    REQUIRE(first != nullptr);
+    REQUIRE_THROWS_AS(t.result(), TaskAlreadyMovedException);
+}
+
+TEST_CASE("Concurrent extraction of a move-only result yields exactly one value", "[task][move][race]") {
+    auto t = make_ptr_task(9);
+    (void)t.await_ready();
+    std::this_thread::sleep_for(50ms);
+
+    std::atomic<int> successes{0};
+    std::atomic<int> already_moved{0};
+    std::vector<std::thread> threads;
+    for (int i = 0; i < 8; ++i) {
+        threads.emplace_back([t, &successes, &already_moved]() {
+            try {
+                auto p = t.result();
+                if (p) ++successes;
+            } catch (const TaskAlreadyMovedException&) {
+                ++already_moved;
+            }
+        });
+    }
+    for (auto& th : threads) th.join();
+    REQUIRE(successes.load() == 1);
+    REQUIRE(already_moved.load() == 7);
+}
+
+// --- Task 14: blocking waits on workers ---
+
+TEST_CASE("Blocking wait on a pool worker throws instead of deadlocking", "[task][deadlock]") {
+    auto outer = []() -> Task<int> {
+        auto inner = []() -> Task<int> {
+            co_await async_sleep(30ms);
+            co_return 1;
+        }();
+        bool threw = false;
+        try {
+            (void)inner.result();
+        } catch (const std::logic_error&) {
+            threw = true;
+        }
+        (void)co_await inner; // still usable asynchronously
+        co_return threw ? 1 : 0;
+    }();
+    REQUIRE(outer.result() == 1);
+}
+
+TEST_CASE("result() on an already-ready task works on a worker", "[task][deadlock]") {
+    auto inner = []() -> Task<int> { co_return 5; }();
+    for (int i = 0; i < 400 && !inner.await_ready(); ++i) std::this_thread::sleep_for(5ms);
+    REQUIRE(inner.await_ready());
+
+    auto outer = [](Task<int> in) -> Task<int> { co_return in.result(); }(inner);
+    REQUIRE(outer.result() == 5);
 }

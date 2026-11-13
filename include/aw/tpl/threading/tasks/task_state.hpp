@@ -2,7 +2,9 @@
 
 #include <coroutine>
 #include <exception>
+#include <atomic>
 #include <mutex>
+#include <optional>
 #include <semaphore>
 #include <vector>
 #include <aw/tpl/thread_pool.hpp>
@@ -87,7 +89,16 @@ struct TaskStateBase {
  */
 template <typename T>
 struct TaskState : TaskStateBase {
-    T value{};
+    std::optional<T> value;
+    std::atomic<bool> value_taken{false};
+
+    /**
+     * @brief One-shot claim used when a move-only result is extracted.
+     * @return True for the first caller only.
+     */
+    bool try_take() noexcept {
+        return !value_taken.exchange(true, std::memory_order_acq_rel);
+    }
 };
 
 /**

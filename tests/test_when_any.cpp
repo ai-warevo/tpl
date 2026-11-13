@@ -2,6 +2,7 @@
 #include <aw/tpl/when_any.hpp>
 
 #include <chrono>
+#include <memory>
 #include <stdexcept>
 #include <vector>
 
@@ -98,4 +99,16 @@ TEST_CASE("when_any reports the correct index under immediate completion races",
         ).result();
         REQUIRE(idx == 1);
     }
+}
+
+TEST_CASE("when_any does not consume a move-only result of the winner", "[when_any][move]") {
+    std::vector<Task<std::unique_ptr<int>>> tasks;
+    tasks.push_back([]() -> Task<std::unique_ptr<int>> {
+        co_await async_sleep(10ms);
+        co_return std::make_unique<int>(42);
+    }());
+    Task<std::unique_ptr<int>> winner = when_any(std::move(tasks)).result();
+    auto p = winner.result();
+    REQUIRE(p != nullptr);
+    REQUIRE(*p == 42);
 }
