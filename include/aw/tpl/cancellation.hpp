@@ -4,11 +4,14 @@
 
 #include <atomic>
 #include <chrono>
+#include <cstddef>
+#include <cstdint>
 #include <coroutine>
 #include <functional>
 #include <memory>
 #include <mutex>
 #include <stdexcept>
+#include <utility>
 #include <vector>
 
 namespace aw::tpl {
@@ -31,18 +34,32 @@ namespace detail {
 struct CancellationState {
     std::atomic<bool> canceled{false};
     std::mutex mtx;
-    std::vector<std::function<void()>> callbacks;
+    std::vector<std::pair<std::uint64_t, std::function<void()>>> callbacks;
+    std::uint64_t next_id = 1;
 
     /**
      * @brief Transitions the state to canceled and invokes all registered callbacks once.
+     *        Every callback runs even if one throws; the first exception is rethrown afterwards.
      */
     void cancel();
 
     /**
      * @brief Registers a callback to run upon cancellation, or executes it immediately if already canceled.
      * @param[in] cb Callable invoked on cancellation.
+     * @return Registration id (> 0), or 0 if the callback was executed immediately.
      */
-    void register_callback(std::function<void()> cb);
+    std::uint64_t register_callback(std::function<void()> cb);
+
+    /**
+     * @brief Removes a previously registered callback.
+     * @return True if the callback was still registered.
+     */
+    bool unregister_callback(std::uint64_t id);
+
+    /**
+     * @brief Number of callbacks currently registered (diagnostic).
+     */
+    std::size_t callback_count();
 };
 
 } // namespace detail
@@ -76,9 +93,23 @@ public:
 
     /**
      * @brief Registers a callback invoked when cancellation is triggered.
+     *        If the token is already canceled the callback runs immediately on the calling thread.
      * @param[in] cb Callable to invoke upon cancellation.
+     * @return Registration id (> 0), or 0 if the callback ran immediately or the token cannot be canceled.
      */
-    void register_callback(std::function<void()> cb) const;
+    std::uint64_t register_callback(std::function<void()> cb) const;
+
+    /**
+     * @brief Removes a callback registered with @c register_callback.
+     * @param[in] id Id returned by @c register_callback.
+     * @return True if the callback was still registered.
+     */
+    [[nodiscard]] bool unregister_callback(std::uint64_t id) const;
+
+    /**
+     * @brief Number of callbacks currently registered on this token's source (diagnostic).
+     */
+    [[nodiscard]] std::size_t registered_callback_count() const;
 
 private:
     friend class CancellationTokenSource;

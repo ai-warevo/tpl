@@ -206,3 +206,33 @@ TEST_CASE("Sleep started during shutdown completes immediately", "[thread_pool][
     }
     REQUIRE(task.result() == 9);
 }
+
+// --- Task 18: constructor / sizes ---
+
+TEST_CASE("ThreadPool sizes 1 and 8 construct and run work", "[thread_pool]") {
+    for (size_t n : {size_t{1}, size_t{8}}) {
+        std::atomic<int> counter{0};
+        std::vector<Task<void>> tasks;
+        {
+            ThreadPool pool(n);
+            REQUIRE(pool.thread_count() == n);
+            CurrentPoolGuard guard(&pool);
+            for (int i = 0; i < 20; ++i) tasks.push_back(sleep_then_bump(0ms, counter));
+        }
+        REQUIRE(counter.load() == 20);
+    }
+}
+
+// --- Task 19: timer overflow ---
+
+TEST_CASE("async_sleep with maximum duration does not fire immediately", "[thread_pool][sleep][overflow]") {
+    Task<void> task;
+    {
+        ThreadPool pool(1);
+        CurrentPoolGuard guard(&pool);
+        task = []() -> Task<void> { co_await async_sleep(std::chrono::milliseconds::max()); }();
+        std::this_thread::sleep_for(100ms);
+        REQUIRE_FALSE(task.await_ready());
+    } // pool destruction wakes the pending timer
+    task.wait();
+}

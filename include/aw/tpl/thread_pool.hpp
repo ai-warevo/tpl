@@ -62,7 +62,7 @@ public:
     explicit ThreadPool(size_t thread_count = default_thread_count_);
 
     /**
-     * @brief Stops all worker and timer threads and joins them safely.
+     * @brief Stops the timer thread, resumes pending timers immediately, drains queued work, and joins all threads.
      */
     ~ThreadPool();
 
@@ -120,15 +120,25 @@ private:
 
     static inline size_t default_thread_count_ = std::thread::hardware_concurrency();
 
-    std::vector<std::jthread> workers_;
+    /**
+     * @brief Ordered shutdown shared by the destructor and the constructor failure path:
+     *        stops and joins the timer thread, flushes pending timers into the queue, then stops
+     *        and joins the workers (which drain the queue first).
+     */
+    void shutdown() noexcept;
+
+    // Synchronization primitives and queues come first; the threads are declared LAST so that
+    // they are destroyed (and joined) FIRST, while everything they use is still alive.
     std::queue<std::coroutine_handle<>> tasks_;
     std::mutex queue_mtx_;
     std::condition_variable queue_cv_;
 
-    std::jthread timer_thread_;
     std::priority_queue<TimerEntry, std::vector<TimerEntry>, std::greater<>> timers_;
     std::mutex timer_mtx_;
     std::condition_variable timer_cv_;
+
+    std::vector<std::jthread> workers_;
+    std::jthread timer_thread_;
 };
 
 /**

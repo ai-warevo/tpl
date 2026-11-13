@@ -25,15 +25,25 @@ ThreadPool& ThreadPool::global() {
 ThreadPool::ThreadPool(size_t thread_count) {
     if (thread_count == 0) thread_count = 2;
 
-    workers_.reserve(thread_count);
-    for (size_t i = 0; i < thread_count; ++i) {
-        workers_.emplace_back([this](std::stop_token st) { worker_loop(st); });
-    }
+    // If starting any thread fails the destructor will not run, so clean up what was started.
+    try {
+        workers_.reserve(thread_count);
+        for (size_t i = 0; i < thread_count; ++i) {
+            workers_.emplace_back([this](std::stop_token st) { worker_loop(st); });
+        }
 
-    timer_thread_ = std::jthread([this](std::stop_token st) { timer_loop(st); });
+        timer_thread_ = std::jthread([this](std::stop_token st) { timer_loop(st); });
+    } catch (...) {
+        shutdown();
+        throw;
+    }
 }
 
 ThreadPool::~ThreadPool() {
+    shutdown();
+}
+
+void ThreadPool::shutdown() noexcept {
     // Step 1: stop and join the timer thread first (no new timer is consumed after this point).
     {
         std::lock_guard lock(timer_mtx_);
@@ -83,6 +93,12 @@ void ThreadPool::schedule(std::coroutine_handle<> h) {
 }
 
 void ThreadPool::schedule_after(std::coroutine_handle<> h, std::chrono::milliseconds duration) {
+    // Clamp BEFORE converting to the clock's finer resolution: adding e.g. milliseconds::max() to a
+    // time_point overflows (UB) and would wrap into the past. 100 years is "forever" for a timer.
+    constexpr auto max_delay = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::hours(24 * 365 * 100));
+    if (duration < std::chrono::milliseconds::zero()) duration = std::chrono::milliseconds::zero();
+    if (duration > max_delay) duration = max_delay;
+
     auto wake_time = std::chrono::steady_clock::now() + duration;
     {
         std::lock_guard lock(timer_mtx_);

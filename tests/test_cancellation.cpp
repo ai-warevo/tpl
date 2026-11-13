@@ -143,3 +143,96 @@ TEST_CASE("Concurrent cancel while suspending does not touch a destroyed awaiter
         REQUIRE(task.result() == 1);
     }
 }
+
+// --- Task 20: callback exception isolation ---
+
+TEST_CASE("All cancellation callbacks run even if one throws", "[cancellation][exceptions]") {
+    CancellationTokenSource cts;
+    auto token = cts.token();
+    std::atomic<int> hits{0};
+    token.register_callback([] { throw std::runtime_error("boom"); });
+    token.register_callback([&] { ++hits; });
+
+    REQUIRE_THROWS_AS(cts.cancel(), std::runtime_error);
+    REQUIRE(hits.load() == 1);
+    REQUIRE(token.is_cancellation_requested());
+}
+
+// --- Task 21: moved-from source ---
+
+TEST_CASE("Moved-from CancellationTokenSource is inert", "[cancellation][move]") {
+    CancellationTokenSource a;
+    auto token_a = a.token();
+    CancellationTokenSource b(std::move(a));
+
+    REQUIRE_NOTHROW(a.cancel());          // NOLINT(bugprone-use-after-move)
+    REQUIRE_NOTHROW(a.cancel_after(1ms)); // NOLINT(bugprone-use-after-move)
+    REQUIRE_FALSE(a.token().is_cancellation_requested()); // NOLINT(bugprone-use-after-move)
+    REQUIRE_FALSE(token_a.is_cancellation_requested());
+
+    b.cancel();
+    REQUIRE(token_a.is_cancellation_requested());
+}
+
+// --- Task 23: registration ids ---
+
+TEST_CASE("Callback registration ids and unregistering", "[cancellation][register]") {
+    CancellationTokenSource cts;
+    auto token = cts.token();
+    std::atomic<int> a_hits{0};
+    std::atomic<int> b_hits{0};
+
+    auto id_a = token.register_callback([&] { ++a_hits; });
+    auto id_b = token.register_callback([&] { ++b_hits; });
+    REQUIRE(id_a != 0);
+    REQUIRE(id_b != 0);
+    REQUIRE(id_a != id_b);
+    REQUIRE(token.registered_callback_count() == 2);
+
+    REQUIRE(token.unregister_callback(id_a));
+    REQUIRE_FALSE(token.unregister_callback(id_a));
+    REQUIRE(token.registered_callback_count() == 1);
+
+    cts.cancel();
+    REQUIRE(a_hits.load() == 0);
+    REQUIRE(b_hits.load() == 1);
+
+    int late_hits = 0;
+    REQUIRE(token.register_callback([&] { ++late_hits; }) == 0);
+    REQUIRE(late_hits == 1);
+}
+
+TEST_CASE("Token without state ignores callback registration", "[cancellation][register]") {
+    auto none = CancellationToken::none();
+    REQUIRE(none.register_callback([] {}) == 0);
+    REQUIRE(none.registered_callback_count() == 0);
+    REQUIRE_FALSE(none.unregister_callback(1));
+}
+
+TEST_CASE("A callback may unregister another one during cancel without deadlock", "[cancellation][register]") {
+    CancellationTokenSource cts;
+    auto token = cts.token();
+    std::atomic<std::uint64_t> victim{0};
+    token.register_callback([&] { (void)token.unregister_callback(victim.load()); });
+    victim = token.register_callback([] {});
+    REQUIRE_NOTHROW(cts.cancel());
+}
+
+// --- Task 24: sleeping repeatedly on one token does not leak callbacks ---
+
+namespace {
+
+Task<void> sleep_many_times(CancellationToken token, int n) {
+    for (int i = 0; i < n; ++i) {
+        co_await async_sleep(1ms, token);
+    }
+}
+
+} // namespace
+
+TEST_CASE("Sleeping repeatedly on one token does not accumulate callbacks", "[cancellation][leak]") {
+    CancellationTokenSource cts;
+    auto token = cts.token();
+    sleep_many_times(token, 200).wait();
+    REQUIRE(token.registered_callback_count() == 0);
+}
