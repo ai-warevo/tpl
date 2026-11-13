@@ -71,3 +71,17 @@ TEST_CASE("when_all propagates exceptions from failed child tasks", "[when_all][
 
     REQUIRE_THROWS_AS(when_all(std::move(tasks)).result(), std::runtime_error);
 }
+
+TEST_CASE("when_all fast-paths already completed tasks", "[when_all][fast]") {
+    auto t1 = []() -> Task<int> { co_return 10; }();
+    auto t2 = []() -> Task<void> { co_return; }();
+    auto t3 = []() -> Task<void> { co_return; }();
+
+    std::this_thread::sleep_for(25ms);
+
+    auto [res, unit] = when_all(t1, t2).result();
+    REQUIRE(res == 10);
+
+    std::vector<Task<void>> done_voids{t2, t3};
+    REQUIRE_NOTHROW(when_all(std::move(done_voids)).wait());
+}

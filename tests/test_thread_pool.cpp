@@ -111,3 +111,21 @@ TEST_CASE("ThreadPool destructor interrupts active timer wait_until cleanly", "[
     } // ~ThreadPool() triggers request_stop() while timer_loop is inside wait_until
     SUCCEED();
 }
+
+TEST_CASE("ThreadPool destructor cleanly aborts timer_loop during wait_until", "[thread_pool][dtor]") {
+    {
+        ThreadPool temp_pool(1);
+
+        auto long_sleep = []() -> Task<void> {
+            co_await async_sleep(10000ms);
+            co_return;
+        };
+
+        detail::current_pool = &temp_pool;
+        auto t = long_sleep();
+        detail::current_pool = nullptr;
+
+        std::this_thread::sleep_for(30ms);
+    }
+    SUCCEED();
+}

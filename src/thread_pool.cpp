@@ -63,7 +63,11 @@ void ThreadPool::schedule_after(std::coroutine_handle<> h, std::chrono::millisec
 }
 
 void ThreadPool::worker_loop(std::stop_token st) {
-    detail::current_pool = this;
+    struct PoolGuard {
+        PoolGuard(ThreadPool* p) noexcept { detail::current_pool = p; }
+        ~PoolGuard() noexcept { detail::current_pool = nullptr; }
+    } guard{this};
+
     while (!st.stop_requested()) {
         std::coroutine_handle<> task;
         {
@@ -77,7 +81,6 @@ void ThreadPool::worker_loop(std::stop_token st) {
         }
         if (task) task.resume();
     }
-    detail::current_pool = nullptr;
 }
 
 void ThreadPool::timer_loop(std::stop_token st) {
