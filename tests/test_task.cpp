@@ -1,6 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <aw/tpl/threading/tasks/task.hpp>
 
+#include <atomic>
 #include <chrono>
 #include <memory>
 #include <stdexcept>
@@ -158,4 +159,44 @@ TEST_CASE("TaskState::finish hands back the first continuation", "[task][state]"
 
     // Check that the first handle was returned by finish()
     REQUIRE(returned_handle == first_handle);
+}
+
+// --- Task 03: completion happens in final_suspend ---
+
+namespace {
+
+struct SlowDtorGuard {
+    std::atomic<bool>* flag;
+    ~SlowDtorGuard() {
+        std::this_thread::sleep_for(50ms);
+        flag->store(true);
+    }
+};
+
+Task<void> run_with_slow_local(std::atomic<bool>& flag) {
+    SlowDtorGuard guard{&flag};
+    co_return;
+}
+
+Task<int> chain_depth(int n) {
+    if (n == 0) co_return 0;
+    co_return 1 + co_await chain_depth(n - 1);
+}
+
+} // namespace
+
+TEST_CASE("Waiter is released only after coroutine locals are destroyed", "[task][final_suspend]") {
+    std::atomic<bool> destroyed{false};
+    auto t = run_with_slow_local(destroyed);
+    t.wait();
+    REQUIRE(destroyed.load());
+}
+
+TEST_CASE("Long chains of awaiting tasks do not overflow the stack", "[task][chain]") {
+    REQUIRE(chain_depth(2000).result() == 2000);
+
+#if defined(NDEBUG) && !defined(__SANITIZE_ADDRESS__) && !defined(__SANITIZE_THREAD__)
+    // Symmetric transfer is only guaranteed by GCC with optimisation and without sanitizers.
+    REQUIRE(chain_depth(200000).result() == 200000);
+#endif
 }
