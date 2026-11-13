@@ -61,3 +61,21 @@ TEST_CASE("Task::run propagates exceptions from throwing lambdas", "[task][run][
 
     REQUIRE_THROWS_AS(task.result(), std::runtime_error);
 }
+
+TEST_CASE("Task handles exceptions in Task::run and rapid co_await completion races", "[task][race]") {
+    auto throwing_run = Task<>::run([]() -> int {
+        throw std::runtime_error("run failure");
+    });
+    REQUIRE_THROWS_AS(throwing_run.result(), std::runtime_error);
+
+    // Stress instant completion race between await_ready() and try_attach_continuation()
+    auto race_coro = []() -> Task<int> {
+        int sum = 0;
+        for (int i = 0; i < 100; ++i) {
+            auto instant = []() -> Task<int> { co_return 1; }();
+            sum += co_await instant;
+        }
+        co_return sum;
+    };
+    REQUIRE(race_coro().result() == 100);
+}

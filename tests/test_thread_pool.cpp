@@ -53,3 +53,20 @@ TEST_CASE("Timer queue orders earlier deadlines ahead of later ones", "[thread_p
 TEST_CASE("ThreadPool global singleton respects configured thread count", "[thread_pool]") {
     REQUIRE(ThreadPool::global().thread_count() >= 1);
 }
+
+TEST_CASE("async_sleep falls back to global pool when awaited from non-pool thread", "[thread_pool][fallback]") {
+    std::atomic<bool> done{false};
+
+    // Call from a raw std::thread where detail::current_pool is nullptr
+    std::thread external_thread([&]() {
+        auto sleeper = []() -> Task<int> {
+            co_await async_sleep(15ms);
+            co_return 123;
+        };
+        REQUIRE(sleeper().result() == 123);
+        done.store(true);
+    });
+
+    external_thread.join();
+    REQUIRE(done.load());
+}

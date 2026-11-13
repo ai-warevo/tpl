@@ -55,3 +55,27 @@ TEST_CASE("when_any works with vector of Task<void>", "[when_any][void]") {
     Task<void> winner = when_any(std::move(tasks)).result();
     REQUIRE_NOTHROW(winner.wait());
 }
+
+TEST_CASE("when_any handles winning Task<void> and concurrent completion races", "[when_any][void]") {
+    // 1. Task<void> wins the race (covers is_void_v<T> branch in spawn_when_any_watcher)
+    size_t winner_idx = when_any(
+        []() -> Task<int> { co_await async_sleep(150ms); co_return 1; }(),
+        []() -> Task<void> { co_await async_sleep(10ms); co_return; }()
+    ).result();
+    REQUIRE(winner_idx == 1);
+
+    // 2. Vector of Task<void>
+    std::vector<Task<void>> void_racers;
+    void_racers.push_back([]() -> Task<void> { co_await async_sleep(150ms); co_return; }());
+    void_racers.push_back([]() -> Task<void> { co_await async_sleep(10ms); co_return; }());
+    REQUIRE_NOTHROW(when_any(std::move(void_racers)).result().wait());
+
+    // 3. Stress rapid completion race to hit await_suspend fast-return path
+    for (int i = 0; i < 50; ++i) {
+        auto idx = when_any(
+            []() -> Task<int> { co_return 1; }(),
+            []() -> Task<int> { co_return 2; }()
+        ).result();
+        REQUIRE((idx == 0 || idx == 1));
+    }
+}

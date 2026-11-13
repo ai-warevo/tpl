@@ -106,7 +106,7 @@ jobs:
             FetchContent_Declare(
                 aw_tpl
                 GIT_REPOSITORY https://github.com/ai-warevo/tpl.git
-                GIT_TAG        \${{ github.ref_name }}
+                GIT_TAG        ${{ github.ref_name }}
             )
             FetchContent_MakeAvailable(aw_tpl)
             target_link_libraries(your_target PRIVATE aw::tpl)
