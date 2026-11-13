@@ -34,5 +34,9 @@ target_link_libraries(aw_tpl_tests PRIVATE
 )
 
 include(CTest)
-include(Catch)
-catch_discover_tests(aw_tpl_tests)
+if(WIN32)
+    add_test(NAME aw_tpl_tests COMMAND aw_tpl_tests)
+else()
+    include(Catch)
+    catch_discover_tests(aw_tpl_tests)
+endif()

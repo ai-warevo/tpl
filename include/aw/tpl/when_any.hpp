@@ -115,9 +115,13 @@ template <typename... Ts>
 Task<size_t> when_any(Task<Ts>... tasks) {
     auto state = std::make_shared<detail::WhenAnyState>();
 
-    size_t index = 0;
-    (detail::spawn_when_any_watcher(std::move(tasks), index++, state), ...);
+    // Move tasks into a tuple to allow indexed access via index_sequence.
+    auto task_tuple = std::make_tuple(std::move(tasks)...);
 
+    // Use a template lambda to expand the index sequence and spawn watchers deterministically.
+    []<std::size_t... Is>(std::tuple<Task<Ts>...>& t, std::index_sequence<Is...>, auto& s) {
+        (detail::spawn_when_any_watcher(std::move(std::get<Is>(t)), Is, s), ...);
+    }(task_tuple, std::index_sequence_for<Ts...>{}, state);
     co_return co_await detail::WhenAnyAwaiter{state};
 }
 
