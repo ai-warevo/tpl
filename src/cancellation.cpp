@@ -1,5 +1,7 @@
 #include <aw/tpl/cancellation.hpp>
 
+#include <exception>
+
 namespace aw::tpl {
 
 OperationCanceledException::OperationCanceledException()
@@ -123,14 +125,18 @@ void CancellationTokenSource::cancel_after(std::chrono::milliseconds delay) {
             std::suspend_never initial_suspend() noexcept { return {}; }
             std::suspend_never final_suspend() noexcept { return {}; }
             void return_void() noexcept {}
-            void unhandled_exception() noexcept {} // LCOV_EXCL_LINE
-
+            // Failing fast is preferable to a silent hang of whoever waits on the token.
+            void unhandled_exception() noexcept { std::terminate(); } // LCOV_EXCL_LINE
         };
     };
 
     [](std::shared_ptr<detail::CancellationState> st, std::chrono::milliseconds d) -> CancelTimerBridge {
         co_await async_sleep(d);
-        st->cancel();
+        try {
+            st->cancel();
+        } catch (...) {
+            // A throwing user callback must not take the timer coroutine down; all callbacks already ran.
+        }
         co_return;
     }(std::move(state), delay);
 }
@@ -152,12 +158,14 @@ void CancelableSleepAwaiter::await_suspend(std::coroutine_handle<> h) const {
 
     const auto d = duration;
     CancellationToken local_token = token;
+    // Resume on the pool the coroutine was running on, not on whatever thread fires the cancel.
+    ThreadPool* origin_pool = detail::current_pool;
     auto ctl = std::make_shared<Control>();
 
     // Cancellation path: the callback has already been consumed by cancel(), nothing to unregister.
-    auto try_resume = [ctl, h]() {
+    auto try_resume = [ctl, h, origin_pool]() {
         if (!ctl->resumed.exchange(true, std::memory_order_acq_rel)) {
-            detail::schedule_on_pool(h);
+            detail::schedule_on_pool(origin_pool, h);
         }
     };
 
@@ -167,21 +175,21 @@ void CancelableSleepAwaiter::await_suspend(std::coroutine_handle<> h) const {
             std::suspend_never initial_suspend() noexcept { return {}; }
             std::suspend_never final_suspend() noexcept { return {}; }
             void return_void() noexcept {}
-            void unhandled_exception() noexcept {} // LCOV_EXCL_LINE
+            void unhandled_exception() noexcept { std::terminate(); } // LCOV_EXCL_LINE
         };
     };
 
     // Arm the timer first, then the cancellation callback (which may run inline if already canceled).
-    [](std::chrono::milliseconds delay, std::shared_ptr<Control> c, CancellationToken tok, std::coroutine_handle<> handle) -> TimerBridge {
+    [](std::chrono::milliseconds delay, std::shared_ptr<Control> c, CancellationToken tok, std::coroutine_handle<> handle, ThreadPool* pool) -> TimerBridge {
         co_await async_sleep(delay);
         if (!c->resumed.exchange(true, std::memory_order_acq_rel)) {
             // Timer won: drop the now useless cancel callback so a long-lived token does not grow.
             // Done BEFORE resuming the coroutine, using only copies owned by this bridge frame.
             (void)tok.unregister_callback(c->callback_id.load());
-            detail::schedule_on_pool(handle);
+            detail::schedule_on_pool(pool, handle);
         }
         co_return;
-    }(d, ctl, local_token, h);
+    }(d, ctl, local_token, h, origin_pool);
 
     const auto id = local_token.register_callback(try_resume);
     ctl->callback_id.store(id);

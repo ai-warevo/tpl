@@ -59,7 +59,7 @@ inline constexpr bool is_truly_copyable_v = is_truly_copyable<T>::value;
  * @tparam T Result type produced by the coroutine (defaults to @c void).
  */
 template <typename T>
-class Task {
+class [[nodiscard]] Task {
 public:
     using promise_type = Promise<T>;
 

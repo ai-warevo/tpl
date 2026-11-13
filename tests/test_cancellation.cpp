@@ -237,3 +237,82 @@ TEST_CASE("Sleeping repeatedly on one token does not accumulate callbacks", "[ca
     sleep_many_times(token, 200).wait();
     REQUIRE(token.registered_callback_count() == 0);
 }
+
+// --- Task 36: cancelled sleep resumes on the origin pool ---
+
+namespace {
+
+Task<ThreadPool*> cancelled_sleep_pool(CancellationToken token) {
+    try {
+        co_await async_sleep(5000ms, token);
+    } catch (const OperationCanceledException&) {
+    }
+    co_return detail::current_pool;
+}
+
+struct PoolScope {
+    ThreadPool* previous;
+    explicit PoolScope(ThreadPool* p) : previous(detail::current_pool) { detail::current_pool = p; }
+    ~PoolScope() { detail::current_pool = previous; }
+};
+
+} // namespace
+
+TEST_CASE("Cancelled sleep resumes on the original pool", "[cancellation][affinity]") {
+    ThreadPool pool(1);
+    CancellationTokenSource cts;
+    Task<ThreadPool*> task;
+    {
+        PoolScope scope(&pool);
+        task = cancelled_sleep_pool(cts.token());
+    }
+    std::this_thread::sleep_for(30ms); // let the coroutine arm its sleep on `pool`
+    cts.cancel();                      // fired from the main (non-pool) thread
+    REQUIRE(task.result() == &pool);
+}
+
+// --- Task 37: cancel_after edge cases ---
+
+TEST_CASE("cancel_after with zero or negative delay cancels synchronously", "[cancellation][timer]") {
+    CancellationTokenSource zero;
+    zero.cancel_after(0ms);
+    REQUIRE(zero.token().is_cancellation_requested());
+
+    CancellationTokenSource negative;
+    negative.cancel_after(-5ms);
+    REQUIRE(negative.token().is_cancellation_requested());
+}
+
+TEST_CASE("Manual cancel racing the cancel_after timer runs callbacks once", "[cancellation][timer]") {
+    CancellationTokenSource cts;
+    auto token = cts.token();
+    std::atomic<int> hits{0};
+    token.register_callback([&] { ++hits; });
+
+    cts.cancel_after(20ms);
+    std::this_thread::sleep_for(5ms);
+    cts.cancel();
+    std::this_thread::sleep_for(60ms); // the timer fires later and must be a no-op
+    REQUIRE(hits.load() == 1);
+}
+
+TEST_CASE("cancel_after still fires after the source is destroyed", "[cancellation][timer]") {
+    CancellationToken token;
+    {
+        CancellationTokenSource cts;
+        token = cts.token();
+        cts.cancel_after(20ms);
+    }
+    bool fired = false;
+    for (int i = 0; i < 400 && !(fired = token.is_cancellation_requested()); ++i) std::this_thread::sleep_for(5ms);
+    REQUIRE(fired);
+}
+
+TEST_CASE("Two cancel_after calls: the earlier deadline wins", "[cancellation][timer]") {
+    CancellationTokenSource cts;
+    cts.cancel_after(2000ms);
+    cts.cancel_after(10ms);
+    bool fired = false;
+    for (int i = 0; i < 400 && !(fired = cts.token().is_cancellation_requested()); ++i) std::this_thread::sleep_for(5ms);
+    REQUIRE(fired);
+}

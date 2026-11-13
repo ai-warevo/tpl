@@ -4,9 +4,15 @@ namespace aw::tpl {
 
 namespace detail {
 
-void schedule_on_pool(std::coroutine_handle<> h) {
-    ThreadPool* pool = current_pool ? current_pool : &ThreadPool::global();
+void schedule_on_pool(ThreadPool* pool, std::coroutine_handle<> h) {
+    if (!pool) {
+        pool = current_pool ? current_pool : &ThreadPool::global();
+    }
     pool->schedule(h);
+}
+
+void schedule_on_pool(std::coroutine_handle<> h) {
+    schedule_on_pool(nullptr, h);
 }
 
 } // namespace detail
@@ -18,7 +24,7 @@ void ThreadPool::set_default_threads(size_t count) noexcept {
 }
 
 ThreadPool& ThreadPool::global() {
-    static ThreadPool instance(default_thread_count_);
+    static ThreadPool instance(default_thread_count_.load());
     return instance;
 }
 

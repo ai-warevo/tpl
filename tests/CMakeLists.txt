@@ -35,8 +35,11 @@ target_link_libraries(aw_tpl_tests PRIVATE
 
 include(CTest)
 if(WIN32)
+    # Windows keeps a single ctest entry (per-test discovery was not verified there); add a timeout
+    # so that a deadlock fails the run instead of hanging it.
     add_test(NAME aw_tpl_tests COMMAND aw_tpl_tests)
+    set_tests_properties(aw_tpl_tests PROPERTIES TIMEOUT 300)
 else()
     include(Catch)
-    catch_discover_tests(aw_tpl_tests)
+    catch_discover_tests(aw_tpl_tests PROPERTIES TIMEOUT 120)
 endif()

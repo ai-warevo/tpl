@@ -2,11 +2,16 @@
 
 #include <aw/tpl/threading/tasks/task.hpp>
 
+#include <aw/tpl/thread_pool.hpp>
+
 #include <atomic>
 #include <coroutine>
+#include <cstddef>
+#include <exception>
 #include <memory>
 #include <mutex>
 #include <stdexcept>
+#include <tuple>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -28,7 +33,7 @@ struct WhenAnyWatcher {
         std::suspend_never initial_suspend() noexcept { return {}; }
         std::suspend_never final_suspend() noexcept { return {}; }
         void return_void() noexcept {}
-        void unhandled_exception() noexcept {} // LCOV_EXCL_LINE
+        void unhandled_exception() noexcept { std::terminate(); } // LCOV_EXCL_LINE (fail fast instead of a silent hang)
     };
 };
 

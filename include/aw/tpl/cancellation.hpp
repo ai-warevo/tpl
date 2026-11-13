@@ -77,13 +77,13 @@ public:
      * @brief Returns a default token that can never be canceled.
      * @return Non-cancelable @c CancellationToken.
      */
-    static CancellationToken none() noexcept;
+    [[nodiscard]] static CancellationToken none() noexcept;
 
     /**
      * @brief Checks whether cancellation has been requested.
      * @return True if canceled; false otherwise.
      */
-    bool is_cancellation_requested() const noexcept;
+    [[nodiscard]] bool is_cancellation_requested() const noexcept;
 
     /**
      * @brief Throws @c OperationCanceledException if cancellation was requested.
@@ -132,7 +132,7 @@ public:
      * @brief Returns a @c CancellationToken linked to this source.
      * @return Associated @c CancellationToken.
      */
-    CancellationToken token() const noexcept;
+    [[nodiscard]] CancellationToken token() const noexcept;
 
     /**
      * @brief Requests cancellation immediately and notifies all registered callbacks.
@@ -156,7 +156,6 @@ private:
 struct CancelableSleepAwaiter {
     std::chrono::milliseconds duration;
     CancellationToken token;
-    std::shared_ptr<std::atomic<bool>> resumed = std::make_shared<std::atomic<bool>>(false);
 
     bool await_ready() const;
     void await_suspend(std::coroutine_handle<> h) const;
@@ -169,6 +168,6 @@ struct CancelableSleepAwaiter {
  * @param[in] token Cancellation token aborting the sleep early if triggered.
  * @return Awaitable timer object throwing @c OperationCanceledException if canceled.
  */
-CancelableSleepAwaiter async_sleep(std::chrono::milliseconds duration, CancellationToken token);
+[[nodiscard]] CancelableSleepAwaiter async_sleep(std::chrono::milliseconds duration, CancellationToken token);
 
 } // namespace aw::tpl

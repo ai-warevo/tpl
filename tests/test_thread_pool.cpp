@@ -257,3 +257,42 @@ TEST_CASE("async_sleep with maximum duration does not fire immediately", "[threa
     } // pool destruction wakes the pending timer
     task.wait();
 }
+
+// --- Task 33: default thread count ---
+
+TEST_CASE("set_default_threads after global pool creation is ignored", "[thread_pool]") {
+    const size_t before = ThreadPool::global().thread_count();
+    ThreadPool::set_default_threads(before + 3);
+    REQUIRE(ThreadPool::global().thread_count() == before);
+}
+
+// --- Tasks 34-35: pool affinity ---
+
+namespace {
+
+struct ScheduleOnPoolAwaiter {
+    ThreadPool* target;
+    bool await_ready() const noexcept { return false; }
+    void await_suspend(std::coroutine_handle<> h) const { detail::schedule_on_pool(target, h); }
+    void await_resume() const noexcept {}
+};
+
+Task<ThreadPool*> hop_to(ThreadPool* target) {
+    co_await ScheduleOnPoolAwaiter{target};
+    co_return detail::current_pool;
+}
+
+} // namespace
+
+TEST_CASE("schedule_on_pool targets the given pool", "[thread_pool][affinity]") {
+    ThreadPool pool(1);
+    SECTION("explicit pool") {
+        REQUIRE(hop_to(&pool).result() == &pool);
+    }
+    SECTION("null pool falls back to current/global pool") {
+        ThreadPool* resumed_on = hop_to(nullptr).result();
+        REQUIRE(resumed_on != nullptr);
+        REQUIRE(resumed_on != &pool);
+    }
+    REQUIRE(detail::current_pool == nullptr);
+}

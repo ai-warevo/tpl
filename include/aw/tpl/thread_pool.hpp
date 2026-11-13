@@ -1,6 +1,9 @@
 #pragma once
 
+#include <atomic>
 #include <chrono>
+#include <cstddef>
+#include <functional>
 #include <condition_variable>
 #include <coroutine>
 #include <mutex>
@@ -32,9 +35,16 @@ inline thread_local ThreadPool* current_pool = nullptr;
  */
 void schedule_on_pool(std::coroutine_handle<> h);
 
+/**
+ * @brief Schedules a coroutine handle on a specific pool.
+ * @param[in] pool Target pool; if null the behaviour of the one-argument overload applies.
+ * @param[in] h Coroutine handle to enqueue.
+ */
+void schedule_on_pool(ThreadPool* pool, std::coroutine_handle<> h);
+
 } // namespace detail
 
-inline auto async_sleep(std::chrono::milliseconds duration);
+[[nodiscard]] inline auto async_sleep(std::chrono::milliseconds duration);
 
 /**
  * @class ThreadPool
@@ -44,7 +54,8 @@ class ThreadPool {
 public:
     /**
      * @brief Configures the worker thread count used when the global pool is first initialized.
-     *        Must be called before the first call to @c ThreadPool::global() or any coroutine launch.
+     *        Must be called before the first call to @c ThreadPool::global() or any coroutine launch;
+     *        it has no effect on the global pool once that pool has been created.
      * @param[in] count Desired number of worker threads (ignored if 0).
      */
     static void set_default_threads(size_t count) noexcept;
@@ -59,7 +70,7 @@ public:
      * @brief Constructs the thread pool and spawns worker threads plus a dedicated timer thread.
      * @param[in] thread_count Number of worker threads to spawn (defaults to @c default_thread_count_).
      */
-    explicit ThreadPool(size_t thread_count = default_thread_count_);
+    explicit ThreadPool(size_t thread_count = default_thread_count_.load());
 
     /**
      * @brief Stops the timer thread, resumes pending timers immediately, drains queued work, and joins all threads.
@@ -73,10 +84,11 @@ public:
      * @brief Returns the number of active worker threads in the pool (excluding the timer thread).
      * @return Count of worker threads.
      */
-    size_t thread_count() const noexcept;
+    [[nodiscard]] size_t thread_count() const noexcept;
 
 private:
     friend void detail::schedule_on_pool(std::coroutine_handle<> h);
+    friend void detail::schedule_on_pool(ThreadPool* pool, std::coroutine_handle<> h);
     friend struct threading::tasks::InitialScheduleAwaiter;
     friend auto async_sleep(std::chrono::milliseconds duration);
 
@@ -118,7 +130,12 @@ private:
      */
     void timer_loop(std::stop_token st);
 
-    static inline size_t default_thread_count_ = std::thread::hardware_concurrency();
+    static size_t initial_thread_count() noexcept {
+        const size_t hw = std::thread::hardware_concurrency();
+        return hw > 0 ? hw : 2;
+    }
+
+    static inline std::atomic<size_t> default_thread_count_{initial_thread_count()};
 
     /**
      * @brief Ordered shutdown shared by the destructor and the constructor failure path:
@@ -146,7 +163,7 @@ private:
  * @param[in] duration Time interval to wait before resuming the coroutine.
  * @return Awaitable timer object bound to the active or global @c ThreadPool.
  */
-inline auto async_sleep(std::chrono::milliseconds duration) {
+[[nodiscard]] inline auto async_sleep(std::chrono::milliseconds duration) {
     struct AsyncSleepAwaiter {
         std::chrono::milliseconds duration;
 

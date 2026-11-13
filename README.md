@@ -84,6 +84,17 @@ Per **C++ Core Guidelines (CP.51)**, avoid invoking capturing coroutine lambdas 
 * Pass state as explicit function/lambda parameters: `[](int& x) -> Task<void> { ... }(x)`, **or**
 * Use `Task<>::run([&] { ... })`, which stores the callable safely inside the coroutine frame.
 
+## 🧵 Threading & Lifetime Contract
+
+* **Never block on a pool worker.** `.result()` / `.wait()` on an unfinished task from a pool worker thread throws `std::logic_error` (it would starve or deadlock the pool). Use `co_await` inside coroutines; block only from non-pool threads such as `main`.
+* **Pool shutdown is orderly.** Destroying a `ThreadPool` resumes pending timers immediately (sleeps end early), drains queued work, then joins all threads. Work scheduled after shutdown began runs inline on the scheduling thread.
+* **Cancellation callbacks** run synchronously on the thread that calls `cancel()` (or on the timer thread for `cancel_after`). All callbacks run even if one throws; the first exception is rethrown by `cancel()`. `register_callback` returns an id usable with `unregister_callback`.
+* **Several awaiters per task are allowed.** A move-only result (e.g. `Task<std::unique_ptr<T>>`) can be taken once; a second `result()` / `co_await` throws `TaskAlreadyMovedException`. `when_any` never consumes the result of its winner.
+* **`when_all` waits for every child** and then rethrows the first failure (in argument/index order), so no child keeps running unobserved.
+* **`when_any` does not cancel the losers**; they keep running to completion.
+* **`Task` is `[[nodiscard]]`**: dropping a task silently loses its exception.
+* **Build options:** `AW_TPL_SANITIZE=address|thread`, `AW_TPL_WARNINGS_AS_ERRORS`, `AW_TPL_ENABLE_COVERAGE`, `AW_TPL_INSTALL`.
+
 ## 📄 License
 
 Distributed under the MIT License. See [`LICENSE`](LICENSE) for more information.
