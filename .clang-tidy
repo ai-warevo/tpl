@@ -1,0 +1,24 @@
+# Opt-in tool for local use (not run in CI). Needs compile_commands.json: configure with CMake first.
+#   clang-tidy -p build/dev src/threading/thread_pool.cpp
+Checks: >
+  -*,
+  bugprone-*,
+  cppcoreguidelines-avoid-capturing-lambda-coroutines,
+  cppcoreguidelines-avoid-reference-coroutine-parameters,
+  cppcoreguidelines-missing-std-forward,
+  cppcoreguidelines-slicing,
+  misc-const-correctness,
+  misc-definitions-in-headers,
+  misc-unused-using-decls,
+  modernize-use-nodiscard,
+  modernize-use-override,
+  modernize-use-using,
+  performance-*,
+  readability-container-size-empty,
+  readability-redundant-member-init,
+  -bugprone-easily-swappable-parameters,
+  -bugprone-exception-escape,
+  -bugprone-unchecked-optional-access
+WarningsAsErrors: ''
+HeaderFilterRegex: '.*/include/aw/tpl/.*'
+FormatStyle: file

@@ -1,0 +1,39 @@
+# Requires clang-format >= 15 (RequiresClausePosition).
+Language: Cpp
+BasedOnStyle: LLVM
+Standard: c++20
+IndentWidth: 4
+ColumnLimit: 120
+UseTab: Never
+
+# Attached braces, `Type* ptr`, `public:` flush with `class`, no namespace indentation.
+BreakBeforeBraces: Attach
+PointerAlignment: Left
+AccessModifierOffset: -4
+NamespaceIndentation: None
+FixNamespaceComments: true
+ConstructorInitializerIndentWidth: 4
+BreakConstructorInitializers: BeforeColon
+PackConstructorInitializers: Never
+
+# `template <typename T>` / `requires ...` each on their own line.
+SpaceAfterTemplateKeyword: true
+AlwaysBreakTemplateDeclarations: Yes
+RequiresClausePosition: OwnLine
+IndentRequiresClause: true
+RequiresExpressionIndentation: OuterScope
+SpaceBeforeParens: ControlStatements
+
+# Small inline accessors / one-line guards are used throughout (`if (!first) first = ...;`).
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortIfStatementsOnASingleLine: WithoutElse
+AllowShortLambdasOnASingleLine: All
+AllowShortBlocksOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+
+# Keep hand-grouped includes (own header, aw/, then <std>) and their order; do not reshuffle.
+SortIncludes: Never
+IncludeBlocks: Preserve
+ReflowComments: false
+MaxEmptyLinesToKeep: 1
+KeepEmptyLinesAtTheStartOfBlocks: false

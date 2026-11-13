@@ -7,6 +7,11 @@ else()
     set(AW_TPL_IS_TOP_LEVEL OFF)
 endif()
 
+if(AW_TPL_IS_TOP_LEVEL)
+    # Lets clangd / clang-tidy / IDEs find the exact flags; harmless for consumers (top-level only).
+    set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+endif()
+
 option(AW_TPL_BUILD_EXAMPLES "Build aw::tpl example applications" ${AW_TPL_IS_TOP_LEVEL})
 
 find_package(Threads REQUIRED)
