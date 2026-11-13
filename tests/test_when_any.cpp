@@ -89,3 +89,13 @@ TEST_CASE("WhenAnyAwaiter await_suspend returns caller handle when already compl
     auto caller = std::noop_coroutine();
     REQUIRE(awaiter.await_suspend(caller) == caller);
 }
+
+TEST_CASE("when_any reports the correct index under immediate completion races", "[when_any][race]") {
+    for (int i = 0; i < 2000; ++i) {
+        size_t idx = when_any(
+            []() -> Task<int> { co_await async_sleep(500ms); co_return 100; }(),
+            []() -> Task<int> { co_return 200; }()
+        ).result();
+        REQUIRE(idx == 1);
+    }
+}

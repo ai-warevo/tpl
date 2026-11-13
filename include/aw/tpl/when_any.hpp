@@ -44,16 +44,22 @@ WhenAnyWatcher spawn_when_any_watcher(threading::tasks::Task<T> task, size_t ind
         // A task completing with an exception still counts as completed in WhenAny
     }
 
-    if (!state->completed.exchange(true, std::memory_order_acq_rel)) {
-        state->winner_index = index;
-        std::coroutine_handle<> h = nullptr;
-        {
-            std::lock_guard lock(state->mtx);
+    // The winner index is written BEFORE `completed` is published (release). Readers observe
+    // `completed` with acquire (await_ready) or under `mtx` (await_suspend), so they always see
+    // the matching index. Claiming the win under the lock makes the claim and the waiter lookup atomic.
+    std::coroutine_handle<> h = nullptr;
+    bool won = false;
+    {
+        std::lock_guard lock(state->mtx);
+        if (!state->completed.load(std::memory_order_relaxed)) {
+            state->winner_index = index;
+            state->completed.store(true, std::memory_order_release);
             h = state->waiter;
+            won = true;
         }
-        if (h) {
-            schedule_on_pool(h);
-        }
+    }
+    if (won && h) {
+        schedule_on_pool(h);
     }
 }
 
@@ -66,6 +72,7 @@ struct WhenAnyAwaiter {
 
     std::coroutine_handle<> await_suspend(std::coroutine_handle<> h) noexcept {
         std::lock_guard lock(state->mtx);
+        // Reading winner_index later is race free: it is written before completed is set (see watcher).
         if (state->completed.load(std::memory_order_acquire)) {
             return h;
         }
