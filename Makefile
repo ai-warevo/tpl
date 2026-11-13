@@ -12,7 +12,11 @@ endif
 BUILD_DIR = build/$(PLATFORM)
 BUILD_DIR_TEST = $(BUILD_DIR)/test
 BUILD_DIR_DEMO = $(BUILD_DIR)/demo
-DEMO_BIN = ./$(BUILD_DIR_DEMO)/examples/$(BUILD_TYPE)/aw_tpl_demo$(EXT)
+ifeq ($(PLATFORM),windows)
+    DEMO_BIN = ./$(BUILD_DIR_DEMO)/examples/$(BUILD_TYPE)/aw_tpl_demo$(EXT)
+else
+    DEMO_BIN = ./$(BUILD_DIR_DEMO)/examples/aw_tpl_demo
+endif
 
 .PHONY: test demo clean
 
