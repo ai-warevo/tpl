@@ -99,13 +99,19 @@ bool CancelableSleepAwaiter::await_ready() const {
 }
 
 void CancelableSleepAwaiter::await_suspend(std::coroutine_handle<> h) const {
-    auto try_resume = [flag = resumed, h]() {
+    // Copy everything needed into locals first: once the handle can be resumed by another thread
+    // the coroutine frame (which owns this awaiter) may be destroyed, so `this` must not be used
+    // after the timer/callback have been armed. A fresh flag per suspension also makes the same
+    // awaiter object safely awaitable more than once.
+    const auto d = duration;
+    CancellationToken local_token = token;
+    auto flag = std::make_shared<std::atomic<bool>>(false);
+
+    auto try_resume = [flag, h]() {
         if (!flag->exchange(true, std::memory_order_acq_rel)) {
             detail::schedule_on_pool(h);
         }
     };
-
-    token.register_callback(try_resume);
 
     struct TimerBridge {
         struct promise_type {
@@ -117,11 +123,14 @@ void CancelableSleepAwaiter::await_suspend(std::coroutine_handle<> h) const {
         };
     };
 
-    [](std::chrono::milliseconds d, auto resume_fn) -> TimerBridge {
-        co_await async_sleep(d);
+    // Arm the timer first, then the cancellation callback (which may run inline if already canceled).
+    [](std::chrono::milliseconds delay, auto resume_fn) -> TimerBridge {
+        co_await async_sleep(delay);
         resume_fn();
         co_return;
-    }(duration, try_resume);
+    }(d, try_resume);
+
+    local_token.register_callback(try_resume);
 }
 
 void CancelableSleepAwaiter::await_resume() const {

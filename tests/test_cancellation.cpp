@@ -105,3 +105,41 @@ TEST_CASE("async_sleep with active token completes normally when not canceled", 
 
     REQUIRE(normal_sleep(cts.token()).result() == 42);
 }
+
+// --- Task 15: awaiter lifetime / reuse ---
+
+namespace {
+
+Task<int> await_same_sleep_twice(CancellationToken token) {
+    auto sleep = async_sleep(10ms, token);
+    co_await sleep;
+    co_await sleep;
+    co_return 1;
+}
+
+Task<int> sleep_and_swallow_cancel(CancellationToken token) {
+    try {
+        co_await async_sleep(1000ms, token);
+    } catch (const OperationCanceledException&) {
+    }
+    co_return 1;
+}
+
+} // namespace
+
+TEST_CASE("The same sleep awaiter can be awaited twice", "[cancellation][sleep]") {
+    CancellationTokenSource cts;
+    auto task = await_same_sleep_twice(cts.token());
+    for (int i = 0; i < 400 && !task.await_ready(); ++i) std::this_thread::sleep_for(5ms);
+    REQUIRE(task.await_ready());
+    REQUIRE(task.result() == 1);
+}
+
+TEST_CASE("Concurrent cancel while suspending does not touch a destroyed awaiter", "[cancellation][race]") {
+    for (int i = 0; i < 500; ++i) {
+        CancellationTokenSource cts;
+        auto task = sleep_and_swallow_cancel(cts.token());
+        cts.cancel();
+        REQUIRE(task.result() == 1);
+    }
+}

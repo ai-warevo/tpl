@@ -2,6 +2,8 @@
 
 #include <aw/tpl/threading/tasks/task.hpp>
 
+#include <exception>
+#include <optional>
 #include <tuple>
 #include <type_traits>
 #include <utility>
@@ -25,6 +27,28 @@ struct WhenAllElement<void> {
 template <typename T>
 using WhenAllElementT = typename WhenAllElement<T>::type;
 
+/**
+ * @brief Outcome of one child task: either a value or the exception it failed with.
+ */
+template <typename T>
+struct WhenAllSettled {
+    std::optional<WhenAllElementT<T>> value;
+    std::exception_ptr exception;
+};
+
+} // namespace detail
+
+namespace threading::tasks::task_detail {
+
+// A settled outcome is only copyable if its payload is (the optional's copy constructor lies for containers).
+template <typename T>
+struct is_truly_copyable<::aw::tpl::detail::WhenAllSettled<T>>
+    : std::bool_constant<is_truly_copyable<::aw::tpl::detail::WhenAllElementT<T>>::value> {};
+
+} // namespace threading::tasks::task_detail
+
+namespace detail {
+
 } // namespace detail
 
 /**
@@ -37,18 +61,31 @@ template <typename T>
 auto when_all(std::vector<threading::tasks::Task<T>> tasks) {
     if constexpr (std::is_void_v<T>) {
         return [](std::vector<threading::tasks::Task<void>> list) -> threading::tasks::Task<void> {
+            // Await EVERY child before reporting a failure, so no sibling keeps running unobserved.
+            std::exception_ptr first;
             for (auto& t : list) {
-                co_await t;
+                try {
+                    co_await t;
+                } catch (...) {
+                    if (!first) first = std::current_exception();
+                }
             }
+            if (first) std::rethrow_exception(first);
             co_return;
         }(std::move(tasks));
     } else {
         return [](std::vector<threading::tasks::Task<T>> list) -> threading::tasks::Task<std::vector<T>> {
             std::vector<T> results;
             results.reserve(list.size());
+            std::exception_ptr first;
             for (auto& t : list) {
-                results.push_back(co_await t);
+                try {
+                    results.push_back(co_await t);
+                } catch (...) {
+                    if (!first) first = std::current_exception();
+                }
             }
+            if (first) std::rethrow_exception(first);
             co_return results;
         }(std::move(tasks));
     }
@@ -71,18 +108,37 @@ auto when_all(threading::tasks::Task<Ts>... tasks) {
         (vec.push_back(std::move(tasks)), ...);
         return when_all(std::move(vec));
     } else {
-        auto await_one = []<typename T>(threading::tasks::Task<T>& t) -> threading::tasks::Task<detail::WhenAllElementT<T>> {
-            if constexpr (std::is_void_v<T>) {
-                co_await t;
-                co_return std::monostate{};
-            } else {
-                co_return co_await t;
+        // The helper never throws: it records either the value or the exception, so awaiting one
+        // child can never abandon the others.
+        auto settle = []<typename T>(threading::tasks::Task<T>& t) -> threading::tasks::Task<detail::WhenAllSettled<T>> {
+            detail::WhenAllSettled<T> outcome;
+            try {
+                if constexpr (std::is_void_v<T>) {
+                    co_await t;
+                    outcome.value.emplace();
+                } else {
+                    outcome.value.emplace(co_await t);
+                }
+            } catch (...) {
+                outcome.exception = std::current_exception();
             }
+            co_return outcome;
         };
 
         return [](auto helper, threading::tasks::Task<Ts>... list) -> threading::tasks::Task<std::tuple<detail::WhenAllElementT<Ts>...>> {
-            co_return std::make_tuple((co_await helper(list))...);
-        }(await_one, std::move(tasks)...);
+            // Braced initialisation guarantees left-to-right evaluation, so children are awaited in order.
+            std::tuple<detail::WhenAllSettled<Ts>...> outcomes{(co_await helper(list))...};
+
+            std::exception_ptr first;
+            std::apply([&first](auto&... o) {
+                ((void)(first || (first = o.exception)), ...);
+            }, outcomes);
+            if (first) std::rethrow_exception(first);
+
+            co_return std::apply([](auto&... o) {
+                return std::tuple<detail::WhenAllElementT<Ts>...>(std::move(*o.value)...);
+            }, outcomes);
+        }(settle, std::move(tasks)...);
     }
 }
 

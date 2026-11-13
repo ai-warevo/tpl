@@ -2,6 +2,7 @@
 #include <aw/tpl/when_all.hpp>
 
 #include <atomic>
+#include <memory>
 #include <chrono>
 #include <stdexcept>
 #include <string>
@@ -85,4 +86,71 @@ TEST_CASE("when_all fast-paths already completed tasks", "[when_all][fast]") {
 
     std::vector<Task<void>> done_voids{t2, t3};
     REQUIRE_NOTHROW(when_all(std::move(done_voids)).wait());
+}
+
+// --- Tasks 16-17: wait for every child before failing ---
+
+namespace {
+
+Task<int> fail_immediately() {
+    throw std::runtime_error("fail");
+    co_return 0;
+}
+
+Task<int> slow_bump(std::atomic<int>& counter) {
+    co_await async_sleep(60ms);
+    ++counter;
+    co_return 1;
+}
+
+Task<void> fail_immediately_void() {
+    throw std::runtime_error("fail");
+    co_return;
+}
+
+Task<void> slow_bump_void(std::atomic<int>& counter) {
+    co_await async_sleep(60ms);
+    ++counter;
+}
+
+} // namespace
+
+TEST_CASE("when_all waits for every child before failing", "[when_all][exceptions]") {
+    std::atomic<int> counter{0};
+    std::vector<Task<int>> tasks;
+    tasks.push_back(fail_immediately());
+    tasks.push_back(slow_bump(counter));
+    REQUIRE_THROWS_AS(when_all(std::move(tasks)).result(), std::runtime_error);
+    REQUIRE(counter.load() == 1);
+
+    std::atomic<int> void_counter{0};
+    std::vector<Task<void>> void_tasks;
+    void_tasks.push_back(fail_immediately_void());
+    void_tasks.push_back(slow_bump_void(void_counter));
+    REQUIRE_THROWS_AS(when_all(std::move(void_tasks)).wait(), std::runtime_error);
+    REQUIRE(void_counter.load() == 1);
+}
+
+TEST_CASE("variadic when_all waits for all children on failure", "[when_all][exceptions]") {
+    std::atomic<int> counter{0};
+    REQUIRE_THROWS_AS(when_all(fail_immediately(), slow_bump(counter)).result(), std::runtime_error);
+    REQUIRE(counter.load() == 1);
+
+    // The failing child is last: earlier children must still be awaited.
+    std::atomic<int> counter2{0};
+    REQUIRE_THROWS_AS(when_all(slow_bump(counter2), fail_immediately()).result(), std::runtime_error);
+    REQUIRE(counter2.load() == 1);
+}
+
+TEST_CASE("variadic when_all supports move-only and container results", "[when_all][move]") {
+    auto [p, v] = when_all(
+        []() -> Task<std::unique_ptr<int>> { co_return std::make_unique<int>(3); }(),
+        []() -> Task<std::vector<std::unique_ptr<int>>> {
+            std::vector<std::unique_ptr<int>> out;
+            out.push_back(std::make_unique<int>(4));
+            co_return out;
+        }()
+    ).result();
+    REQUIRE(*p == 3);
+    REQUIRE(*v.at(0) == 4);
 }
