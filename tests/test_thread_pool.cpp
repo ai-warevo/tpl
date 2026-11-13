@@ -96,3 +96,18 @@ TEST_CASE("ThreadPool destructor cleanly stops timer thread with pending timers"
     }
     SUCCEED();
 }
+
+TEST_CASE("ThreadPool destructor interrupts active timer wait_until cleanly", "[thread_pool][dtor]") {
+    {
+        ThreadPool temp_pool(1);
+        detail::current_pool = &temp_pool;
+
+        // Enqueue a long timer directly onto temp_pool's timer thread
+        auto awaiter = async_sleep(10000ms);
+        awaiter.await_suspend(std::noop_coroutine());
+
+        detail::current_pool = nullptr;
+        std::this_thread::sleep_for(15ms); // Let timer_loop enter wait_until(next_wake)
+    } // ~ThreadPool() triggers request_stop() while timer_loop is inside wait_until
+    SUCCEED();
+}

@@ -44,6 +44,7 @@ jobs:
             --filter "include/aw/tpl/" \
             --filter "src/" \
             --exclude-unreachable-branches \
+            --exclude-throw-branches \
             --print-summary \
             --xml coverage.xml \
             --html-details htmlcov/index.html
