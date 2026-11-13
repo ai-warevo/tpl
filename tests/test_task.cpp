@@ -128,3 +128,34 @@ TEST_CASE("TaskState keeps every attached continuation", "[task][continuation]")
     // Attaching after completion must return false
     REQUIRE_FALSE(ts.try_attach_continuation(std::noop_coroutine()));
 }
+
+// --- New tests for Task 02 ---
+
+TEST_CASE("TaskState::finish returns noop when nobody waits", "[task][state]") {
+    TaskState<void> ts;
+    REQUIRE_FALSE(ts.is_ready());
+
+    // Check that the finish returns noop when no continuations are attached
+    auto handle = ts.finish();
+    REQUIRE(handle == std::noop_coroutine());
+    REQUIRE(ts.is_ready());
+    
+    // Check that we can't attach after completion
+    REQUIRE_FALSE(ts.try_attach_continuation(std::noop_coroutine()));
+}
+
+TEST_CASE("TaskState::finish hands back the first continuation", "[task][state]") {
+    TaskState<int> ts;
+    std::coroutine_handle<> first_handle = std::noop_coroutine();
+    REQUIRE(ts.try_attach_continuation(first_handle));
+    
+    // Attach a second handle
+    std::coroutine_handle<> second_handle = std::noop_coroutine();
+    REQUIRE(ts.try_attach_continuation(second_handle));
+    
+    // Capture the returned handle
+    auto returned_handle = ts.finish();
+
+    // Check that the first handle was returned by finish()
+    REQUIRE(returned_handle == first_handle);
+}

@@ -44,24 +44,6 @@ struct TaskStateBase {
     }
 
     /**
-     * @brief Marks the task as finished, releases blocking waiters, and resumes any continuation.
-     */
-    void complete() {
-        std::vector<std::coroutine_handle<>> to_resume;
-        {
-            std::lock_guard lock(mtx);
-            ready = true;
-            to_resume = std::move(continuations);
-            continuations.clear();
-        }
-        done_sem.release();
-        // Resume all captured continuations outside the lock
-        for (auto& cont : to_resume) {
-            cont.resume();
-        }
-    }
-
-    /**
      * @brief Finishes the task state, releasing waiters, and returning the first continuation handle.
      * @return The first continuation handle, or std::noop_coroutine() if no continuations were attached.
      */
@@ -87,6 +69,15 @@ struct TaskStateBase {
         }
         return first;
     }
+
+    /**
+     * @brief Marks the task as finished, releases blocking waiters, and resumes the first continuation.
+     */
+    void complete() {
+        // Use finish() to perform cleanup and get the handle for symmetric transfer.
+        std::coroutine_handle<> first = finish();
+        first.resume();
+    }
 };
 
 /**
@@ -105,6 +96,5 @@ struct TaskState : TaskStateBase {
  */
 template <>
 struct TaskState<void> : TaskStateBase {};
-
 
 } // namespace aw::tpl::threading::tasks
