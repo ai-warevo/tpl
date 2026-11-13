@@ -7,14 +7,7 @@ FetchContent_Declare(
     GIT_SHALLOW    TRUE
 )
 
-FetchContent_Declare(
-    FakeIt
-    GIT_REPOSITORY https://github.com/eranpeer/FakeIt.git
-    GIT_TAG        2.5.0
-    GIT_SHALLOW    TRUE
-)
-
-FetchContent_MakeAvailable(Catch2 FakeIt)
+FetchContent_MakeAvailable(Catch2)
 
 add_executable(aw_tpl_tests
     test_thread_pool.cpp
@@ -22,10 +15,6 @@ add_executable(aw_tpl_tests
     test_when_all.cpp
     test_when_any.cpp
     test_cancellation.cpp
-)
-
-target_include_directories(aw_tpl_tests PRIVATE
-    ${fakeit_SOURCE_DIR}/single_header/catch
 )
 
 target_link_libraries(aw_tpl_tests PRIVATE

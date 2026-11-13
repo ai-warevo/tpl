@@ -1,14 +1,14 @@
 #include <catch2/catch_test_macros.hpp>
-#include <fakeit.hpp>
 #include <aw/tpl/tpl.hpp>
 
 #include <atomic>
 #include <chrono>
+#include <vector>
+#include <mutex>
 
 using namespace std::chrono_literals;
 using namespace aw::tpl;
 using namespace aw::tpl::threading::tasks;
-using namespace fakeit;
 
 namespace {
 
@@ -16,6 +16,23 @@ struct IWorker {
     virtual ~IWorker() = default;
     virtual int step(int x) = 0;
     virtual void on_cancel() = 0;
+};
+
+// Hand-written recording mock (FakeIt's vtable tricks crash/hang under newer GCC and sanitizers).
+struct RecordingWorker final : IWorker {
+    int step(int x) override {
+        std::lock_guard lock(mtx);
+        step_args.push_back(x);
+        return x + 1;
+    }
+    void on_cancel() override {
+        std::lock_guard lock(mtx);
+        ++cancel_calls;
+    }
+
+    std::mutex mtx;
+    std::vector<int> step_args;
+    int cancel_calls = 0;
 };
 
 } // namespace
@@ -66,20 +83,18 @@ TEST_CASE("async_sleep aborts immediately if token is already canceled or via ca
     REQUIRE_THROWS_AS(mid_flight_task(timed_cts.token()).wait(), OperationCanceledException);
 }
 
-TEST_CASE("Cooperative cancellation with FakeIt mock verification", "[cancellation][mock]") {
-    Mock<IWorker> mock;
-    When(Method(mock, step)).AlwaysDo([](int x) { return x + 1; });
-    Fake(Method(mock, on_cancel));
+TEST_CASE("Cooperative cancellation with recording mock verification", "[cancellation][mock]") {
+    RecordingWorker mock;
 
     CancellationTokenSource cts;
 
     auto pipeline = [&](CancellationToken token) -> Task<int> {
-        int val = mock.get().step(10);
+        int val = mock.step(10);
         try {
             co_await async_sleep(500ms, token);
-            co_return mock.get().step(val);
+            co_return mock.step(val);
         } catch (const OperationCanceledException&) {
-            mock.get().on_cancel();
+            mock.on_cancel();
             throw;
         }
     };
@@ -90,9 +105,9 @@ TEST_CASE("Cooperative cancellation with FakeIt mock verification", "[cancellati
     cts.cancel();
 
     REQUIRE_THROWS_AS(task.result(), OperationCanceledException);
-    Verify(Method(mock, step).Using(10)).Once();
-    Verify(Method(mock, step).Using(11)).Never();
-    Verify(Method(mock, on_cancel)).Once();
+    std::lock_guard lock(mock.mtx);
+    REQUIRE(mock.step_args == std::vector<int>{10});  // step(11) never happens
+    REQUIRE(mock.cancel_calls == 1);
 }
 
 TEST_CASE("async_sleep with active token completes normally when not canceled", "[cancellation][sleep]") {
