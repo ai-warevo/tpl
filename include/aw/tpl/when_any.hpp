@@ -2,6 +2,7 @@
 
 #include <aw/tpl/threading/tasks/task.hpp>
 
+#include <aw/tpl/detached.hpp>
 #include <aw/tpl/thread_pool.hpp>
 
 #include <atomic>
@@ -27,18 +28,8 @@ struct WhenAnyState {
     size_t winner_index = 0;
 };
 
-struct WhenAnyWatcher {
-    struct promise_type {
-        WhenAnyWatcher get_return_object() noexcept { return {}; }
-        std::suspend_never initial_suspend() noexcept { return {}; }
-        std::suspend_never final_suspend() noexcept { return {}; }
-        void return_void() noexcept {}
-        void unhandled_exception() noexcept { std::terminate(); } // LCOV_EXCL_LINE (fail fast instead of a silent hang)
-    };
-};
-
 template <typename T>
-WhenAnyWatcher spawn_when_any_watcher(threading::tasks::Task<T> task, size_t index, std::shared_ptr<WhenAnyState> state) {
+Detached spawn_when_any_watcher(threading::tasks::Task<T> task, size_t index, std::shared_ptr<WhenAnyState> state) {
     // Wait for completion only: a failed task still counts as completed, and a move-only result
     // must stay available for the caller (the winner is returned as a Task).
     co_await task.completion();
@@ -102,7 +93,7 @@ threading::tasks::Task<threading::tasks::Task<T>> when_any(std::vector<threading
 
     auto state = std::make_shared<detail::WhenAnyState>();
     for (size_t i = 0; i < tasks.size(); ++i) {
-        detail::spawn_when_any_watcher(tasks[i], i, state);
+        detail::spawn_when_any_watcher(tasks[i], i, state).start();
     }
 
     size_t winner = co_await detail::WhenAnyAwaiter{state};
@@ -126,7 +117,7 @@ threading::tasks::Task<size_t> when_any(threading::tasks::Task<Ts>... tasks) {
 
     // Use a template lambda to expand the index sequence and spawn watchers deterministically.
     []<std::size_t... Is>(std::tuple<threading::tasks::Task<Ts>...>& t, std::index_sequence<Is...>, auto& s) {
-        (detail::spawn_when_any_watcher(std::move(std::get<Is>(t)), Is, s), ...);
+        (detail::spawn_when_any_watcher(std::move(std::get<Is>(t)), Is, s).start(), ...);
     }(task_tuple, std::index_sequence_for<Ts...>{}, state);
     co_return co_await detail::WhenAnyAwaiter{state};
 }

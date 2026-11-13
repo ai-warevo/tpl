@@ -83,6 +83,7 @@ target_sources(aw_tpl
             include/aw/tpl/when_all.hpp
             include/aw/tpl/when_any.hpp
             include/aw/tpl/cancellation.hpp
+            include/aw/tpl/detached.hpp
 )
 
 target_link_libraries(aw_tpl PUBLIC Threads::Threads)

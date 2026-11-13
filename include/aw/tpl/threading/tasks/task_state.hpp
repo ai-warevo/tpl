@@ -22,6 +22,24 @@ struct TaskStateBase {
     std::exception_ptr exception = nullptr;
     std::binary_semaphore done_sem{0};
 
+    /// Coroutine frame owned by this state once the coroutine reached its final suspend point.
+    std::coroutine_handle<> frame = nullptr;
+
+    TaskStateBase() = default;
+    TaskStateBase(const TaskStateBase&) = delete;
+    TaskStateBase& operator=(const TaskStateBase&) = delete;
+
+    /**
+     * @brief Destroys the finished coroutine frame (and with it any by-value parameters).
+     *        Runs when the last Task/awaiter reference is dropped, i.e. never while the ramp function
+     *        of the coroutine can still be running.
+     */
+    ~TaskStateBase() {
+        if (frame) {
+            frame.destroy();
+        }
+    }
+
     /**
      * @brief Checks whether the task has completed in a thread-safe manner.
      * @return True if result or exception is ready.

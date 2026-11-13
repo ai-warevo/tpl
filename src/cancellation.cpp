@@ -1,5 +1,7 @@
 #include <aw/tpl/cancellation.hpp>
 
+#include <aw/tpl/detached.hpp>
+
 #include <exception>
 
 namespace aw::tpl {
@@ -119,18 +121,7 @@ void CancellationTokenSource::cancel_after(std::chrono::milliseconds delay) {
     if (!state_) return; // moved-from source is inert
     auto state = state_;
 
-    struct CancelTimerBridge {
-        struct promise_type {
-            CancelTimerBridge get_return_object() noexcept { return {}; }
-            std::suspend_never initial_suspend() noexcept { return {}; }
-            std::suspend_never final_suspend() noexcept { return {}; }
-            void return_void() noexcept {}
-            // Failing fast is preferable to a silent hang of whoever waits on the token.
-            void unhandled_exception() noexcept { std::terminate(); } // LCOV_EXCL_LINE
-        };
-    };
-
-    [](std::shared_ptr<detail::CancellationState> st, std::chrono::milliseconds d) -> CancelTimerBridge {
+    [](std::shared_ptr<detail::CancellationState> st, std::chrono::milliseconds d) -> detail::Detached {
         co_await async_sleep(d);
         try {
             st->cancel();
@@ -138,7 +129,7 @@ void CancellationTokenSource::cancel_after(std::chrono::milliseconds delay) {
             // A throwing user callback must not take the timer coroutine down; all callbacks already ran.
         }
         co_return;
-    }(std::move(state), delay);
+    }(std::move(state), delay).start();
 }
 
 bool CancelableSleepAwaiter::await_ready() const {
@@ -169,18 +160,8 @@ void CancelableSleepAwaiter::await_suspend(std::coroutine_handle<> h) const {
         }
     };
 
-    struct TimerBridge {
-        struct promise_type {
-            TimerBridge get_return_object() noexcept { return {}; }
-            std::suspend_never initial_suspend() noexcept { return {}; }
-            std::suspend_never final_suspend() noexcept { return {}; }
-            void return_void() noexcept {}
-            void unhandled_exception() noexcept { std::terminate(); } // LCOV_EXCL_LINE
-        };
-    };
-
     // Arm the timer first, then the cancellation callback (which may run inline if already canceled).
-    [](std::chrono::milliseconds delay, std::shared_ptr<Control> c, CancellationToken tok, std::coroutine_handle<> handle, ThreadPool* pool) -> TimerBridge {
+    [](std::chrono::milliseconds delay, std::shared_ptr<Control> c, CancellationToken tok, std::coroutine_handle<> handle, ThreadPool* pool) -> detail::Detached {
         co_await async_sleep(delay);
         if (!c->resumed.exchange(true, std::memory_order_acq_rel)) {
             // Timer won: drop the now useless cancel callback so a long-lived token does not grow.
@@ -189,7 +170,7 @@ void CancelableSleepAwaiter::await_suspend(std::coroutine_handle<> h) const {
             detail::schedule_on_pool(pool, handle);
         }
         co_return;
-    }(d, ctl, local_token, h, origin_pool);
+    }(d, ctl, local_token, h, origin_pool).start();
 
     const auto id = local_token.register_callback(try_resume);
     ctl->callback_id.store(id);
