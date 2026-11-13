@@ -27,7 +27,7 @@
     </tr>
     <tr>
       <th scope="row">Date:</th>
-      <td>2026-11-13 05:28:32</td>
+      <td>2026-11-13 05:34:37</td>
     </tr>
   </table>
 </div>
@@ -83,7 +83,7 @@
     <tr><td><a href="#l44">aw::tpl::ThreadPool::thread_count() const (line 44)</a></td><td>called 2 times, returned 2 times</td><td>100.0%</td></tr>
     <tr><td><a href="#l83">aw::tpl::ThreadPool::timer_loop(std::stop_token) (line 83)</a></td><td>called 15 times, returned 15 times</td><td>88.0%</td></tr>
     <tr><td><a href="#l88">aw::tpl::ThreadPool::timer_loop(std::stop_token)::{lambda()#1}::operator()() const (line 88)</a></td><td>called 44 times, returned 44 times</td><td>100.0%</td></tr>
-    <tr><td><a href="#l91">aw::tpl::ThreadPool::timer_loop(std::stop_token)::{lambda()#2}::operator()() const (line 91)</a></td><td>called 44 times, returned 44 times</td><td>100.0%</td></tr>
+    <tr><td><a href="#l91">aw::tpl::ThreadPool::timer_loop(std::stop_token)::{lambda()#2}::operator()() const (line 91)</a></td><td>called 43 times, returned 43 times</td><td>100.0%</td></tr>
     <tr><td><a href="#l65">aw::tpl::ThreadPool::worker_loop(std::stop_token) (line 65)</a></td><td>called 57 times, returned 57 times</td><td>87.0%</td></tr>
     <tr><td><a href="#l71">aw::tpl::ThreadPool::worker_loop(std::stop_token)::{lambda()#1}::operator()() const (line 71)</a></td><td>called 249 times, returned 249 times</td><td>100.0%</td></tr>
     <tr><td><a href="#l36">aw::tpl::ThreadPool::~ThreadPool() (line 36)</a></td><td>called 15 times, returned 15 times</td><td>100.0%</td></tr>
@@ -944,18 +944,18 @@
         <details class="linebranchDetails">
         <summary class="linebranchSummary">6/8</summary>
         <div class="linebranchContents">
-          <div class="takenBranch">&check; Branch 1 taken 40 times.</div>
+          <div class="takenBranch">&check; Branch 1 taken 39 times.</div>
           <div class="takenBranch">&check; Branch 2 taken 4 times.</div>
-          <div class="takenBranch">&check; Branch 4 taken 40 times.</div>
+          <div class="takenBranch">&check; Branch 4 taken 39 times.</div>
           <div class="notTakenBranch">&cross; Branch 5 not taken.</div>
-          <div class="takenBranch">&check; Branch 8 taken 40 times.</div>
+          <div class="takenBranch">&check; Branch 8 taken 39 times.</div>
           <div class="notTakenBranch">&cross; Branch 9 not taken.</div>
           <div class="takenBranch">&check; Branch 11 taken 2 times.</div>
-          <div class="takenBranch">&check; Branch 12 taken 38 times.</div>
+          <div class="takenBranch">&check; Branch 12 taken 37 times.</div>
         </div>
         </details>
       </td>
-      <td class="linecount partialCoveredLine">44</td>
+      <td class="linecount partialCoveredLine">43</td>
       <td class="src partialCoveredLine"><span class="w">                </span><span class="k">return</span><span class="w"> </span><span class="n">st</span><span class="p">.</span><span class="n">stop_requested</span><span class="p">()</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">timers_</span><span class="p">.</span><span class="n">empty</span><span class="p">()</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">timers_</span><span class="p">.</span><span class="n">top</span><span class="p">().</span><span class="n">wake_time</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">next_wake</span><span class="p">);</span></td>
     </tr>
     <tr class="source-line">
