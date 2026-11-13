@@ -27,7 +27,7 @@
     </tr>
     <tr>
       <th scope="row">Date:</th>
-      <td>2026-11-13 05:42:05</td>
+      <td>2026-11-13 05:49:08</td>
     </tr>
   </table>
 </div>
@@ -73,11 +73,11 @@
       <th>Call count</th>
       <th>Block coverage</th>
     </tr>
-    <tr><td><a href="#l87">aw::tpl::ThreadPool::TimerEntry::operator&gt;(aw::tpl::ThreadPool::TimerEntry const&amp;) const (line 87)</a></td><td>called 21 times, returned 21 times</td><td>100.0%</td></tr>
-    <tr><td><a href="#l135">aw::tpl::async_sleep(std::chrono::duration&lt;long, std::ratio&lt;1l, 1000l&gt; &gt;) (line 135)</a></td><td>called 31 times, returned 31 times</td><td>100.0%</td></tr>
-    <tr><td><a href="#l139">aw::tpl::async_sleep(std::chrono::duration&lt;long, std::ratio&lt;1l, 1000l&gt; &gt;)::AsyncSleepAwaiter::await_ready() const (line 139)</a></td><td>called 31 times, returned 31 times</td><td>100.0%</td></tr>
-    <tr><td><a href="#l146">aw::tpl::async_sleep(std::chrono::duration&lt;long, std::ratio&lt;1l, 1000l&gt; &gt;)::AsyncSleepAwaiter::await_resume() const (line 146)</a></td><td>called 24 times, returned 24 times</td><td>100.0%</td></tr>
-    <tr><td><a href="#l141">aw::tpl::async_sleep(std::chrono::duration&lt;long, std::ratio&lt;1l, 1000l&gt; &gt;)::AsyncSleepAwaiter::await_suspend(std::__n4861::coroutine_handle&lt;void&gt;) const (line 141)</a></td><td>called 29 times, returned 29 times</td><td>100.0%</td></tr>
+    <tr><td><a href="#l87">aw::tpl::ThreadPool::TimerEntry::operator&gt;(aw::tpl::ThreadPool::TimerEntry const&amp;) const (line 87)</a></td><td>called 26 times, returned 26 times</td><td>100.0%</td></tr>
+    <tr><td><a href="#l135">aw::tpl::async_sleep(std::chrono::duration&lt;long, std::ratio&lt;1l, 1000l&gt; &gt;) (line 135)</a></td><td>called 36 times, returned 36 times</td><td>100.0%</td></tr>
+    <tr><td><a href="#l139">aw::tpl::async_sleep(std::chrono::duration&lt;long, std::ratio&lt;1l, 1000l&gt; &gt;)::AsyncSleepAwaiter::await_ready() const (line 139)</a></td><td>called 36 times, returned 36 times</td><td>100.0%</td></tr>
+    <tr><td><a href="#l146">aw::tpl::async_sleep(std::chrono::duration&lt;long, std::ratio&lt;1l, 1000l&gt; &gt;)::AsyncSleepAwaiter::await_resume() const (line 146)</a></td><td>called 27 times, returned 27 times</td><td>100.0%</td></tr>
+    <tr><td><a href="#l141">aw::tpl::async_sleep(std::chrono::duration&lt;long, std::ratio&lt;1l, 1000l&gt; &gt;)::AsyncSleepAwaiter::await_suspend(std::__n4861::coroutine_handle&lt;void&gt;) const (line 141)</a></td><td>called 34 times, returned 34 times</td><td>100.0%</td></tr>
   </table>
 </details>
 
@@ -698,14 +698,14 @@
       <td class="lineno"><a id="l87" href="#l87">87</a></td>
       <td class="linebranch">
       </td>
-      <td class="linecount coveredLine">21</td>
+      <td class="linecount coveredLine">26</td>
       <td class="src coveredLine"><span class="w">        </span><span class="kt">bool</span><span class="w"> </span><span class="k">operator</span><span class="o">&gt;</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">TimerEntry</span><span class="o">&amp;</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="k">noexcept</span><span class="w"> </span><span class="p">{</span></td>
     </tr>
     <tr class="source-line">
       <td class="lineno"><a id="l88" href="#l88">88</a></td>
       <td class="linebranch">
       </td>
-      <td class="linecount coveredLine">21</td>
+      <td class="linecount coveredLine">26</td>
       <td class="src coveredLine"><span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">wake_time</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">other</span><span class="p">.</span><span class="n">wake_time</span><span class="p">;</span></td>
     </tr>
     <tr class="source-line">
@@ -1034,7 +1034,7 @@
       <td class="lineno"><a id="l135" href="#l135">135</a></td>
       <td class="linebranch">
       </td>
-      <td class="linecount coveredLine">31</td>
+      <td class="linecount coveredLine">36</td>
       <td class="src coveredLine"><span class="kr">inline</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">async_sleep</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">chrono</span><span class="o">::</span><span class="n">milliseconds</span><span class="w"> </span><span class="n">duration</span><span class="p">)</span><span class="w"> </span><span class="p">{</span></td>
     </tr>
     <tr class="source-line">
@@ -1062,7 +1062,7 @@
       <td class="lineno"><a id="l139" href="#l139">139</a></td>
       <td class="linebranch">
       </td>
-      <td class="linecount coveredLine">31</td>
+      <td class="linecount coveredLine">36</td>
       <td class="src coveredLine"><span class="w">        </span><span class="kt">bool</span><span class="w"> </span><span class="nf">await_ready</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="k">noexcept</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">duration</span><span class="p">.</span><span class="n">count</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="p">}</span></td>
     </tr>
     <tr class="source-line">
@@ -1076,7 +1076,7 @@
       <td class="lineno"><a id="l141" href="#l141">141</a></td>
       <td class="linebranch">
       </td>
-      <td class="linecount coveredLine">29</td>
+      <td class="linecount coveredLine">34</td>
       <td class="src coveredLine"><span class="w">        </span><span class="kt">void</span><span class="w"> </span><span class="nf">await_suspend</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">coroutine_handle</span><span class="o">&lt;&gt;</span><span class="w"> </span><span class="n">h</span><span class="p">)</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="p">{</span></td>
     </tr>
     <tr class="source-line">
@@ -1086,25 +1086,25 @@
         <summary class="linebranchSummary">2/2</summary>
         <div class="linebranchContents">
           <div class="takenBranch">&check; Branch 0 taken 1 times.</div>
-          <div class="takenBranch">&check; Branch 1 taken 28 times.</div>
+          <div class="takenBranch">&check; Branch 1 taken 33 times.</div>
         </div>
         </details>
       </td>
-      <td class="linecount coveredLine">29</td>
+      <td class="linecount coveredLine">34</td>
       <td class="src coveredLine"><span class="w">            </span><span class="n">ThreadPool</span><span class="o">*</span><span class="w"> </span><span class="n">pool</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">detail</span><span class="o">::</span><span class="n">current_pool</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="n">detail</span><span class="o">::</span><span class="n">current_pool</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="o">&amp;</span><span class="n">ThreadPool</span><span class="o">::</span><span class="n">global</span><span class="p">();</span></td>
     </tr>
     <tr class="source-line">
       <td class="lineno"><a id="l143" href="#l143">143</a></td>
       <td class="linebranch">
       </td>
-      <td class="linecount coveredLine">29</td>
+      <td class="linecount coveredLine">34</td>
       <td class="src coveredLine"><span class="w">            </span><span class="n">pool</span><span class="o">-&gt;</span><span class="n">schedule_after</span><span class="p">(</span><span class="n">h</span><span class="p">,</span><span class="w"> </span><span class="n">duration</span><span class="p">);</span></td>
     </tr>
     <tr class="source-line">
       <td class="lineno"><a id="l144" href="#l144">144</a></td>
       <td class="linebranch">
       </td>
-      <td class="linecount coveredLine">29</td>
+      <td class="linecount coveredLine">34</td>
       <td class="src coveredLine"><span class="w">        </span><span class="p">}</span></td>
     </tr>
     <tr class="source-line">
@@ -1118,7 +1118,7 @@
       <td class="lineno"><a id="l146" href="#l146">146</a></td>
       <td class="linebranch">
       </td>
-      <td class="linecount coveredLine">24</td>
+      <td class="linecount coveredLine">27</td>
       <td class="src coveredLine"><span class="w">        </span><span class="kt">void</span><span class="w"> </span><span class="nf">await_resume</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="k">noexcept</span><span class="w"> </span><span class="p">{}</span></td>
     </tr>
     <tr class="source-line">
@@ -1132,7 +1132,7 @@
       <td class="lineno"><a id="l148" href="#l148">148</a></td>
       <td class="linebranch">
       </td>
-      <td class="linecount coveredLine">31</td>
+      <td class="linecount coveredLine">36</td>
       <td class="src coveredLine"><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">AsyncSleepAwaiter</span><span class="p">{</span><span class="n">duration</span><span class="p">};</span></td>
     </tr>
     <tr class="source-line">
