@@ -1,13 +1,12 @@
 BUILD_TYPE = Debug
+BASE_FLAGS = -DCMAKE_BUILD_TYPE=$(BUILD_TYPE)
 
 ifeq ($(OS),Windows_NT)
     PLATFORM = windows
     EXT = .exe
-    BASE_FLAGS = -DCMAKE_BUILD_TYPE=$(BUILD_TYPE) -DCMAKE_CXX_FLAGS="/std:c++20 /EHsc"
 else
     PLATFORM = linux
     EXT =
-    BASE_FLAGS = -DCMAKE_BUILD_TYPE=$(BUILD_TYPE)
 endif
 
 BUILD_DIR = build/$(PLATFORM)
