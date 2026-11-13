@@ -13,9 +13,9 @@ BUILD_DIR = build/$(PLATFORM)
 BUILD_DIR_TEST = $(BUILD_DIR)/test
 BUILD_DIR_DEMO = $(BUILD_DIR)/demo
 ifeq ($(PLATFORM),windows)
-    DEMO_BIN = ./$(BUILD_DIR_DEMO)/examples/$(BUILD_TYPE)/aw_tpl_demo$(EXT)
+    DEMO_DIR = ./$(BUILD_DIR_DEMO)/examples/$(BUILD_TYPE)
 else
-    DEMO_BIN = ./$(BUILD_DIR_DEMO)/examples/aw_tpl_demo
+    DEMO_DIR = ./$(BUILD_DIR_DEMO)/examples
 endif
 
 .PHONY: test demo clean
@@ -26,11 +26,11 @@ test:
 	cmake --build $(BUILD_DIR_TEST) --config $(BUILD_TYPE) --parallel
 	ctest --test-dir $(BUILD_DIR_TEST) -C $(BUILD_TYPE) --output-on-failure
 
-# Configure, build, and run aw_tpl_demo only
+# Configure, build, and run every example in examples/
 demo:
 	cmake -B $(BUILD_DIR_DEMO) --fresh $(BASE_FLAGS) -DAW_TPL_BUILD_TESTS=OFF -DAW_TPL_BUILD_EXAMPLES=ON
-	cmake --build $(BUILD_DIR_DEMO) --config $(BUILD_TYPE) --target aw_tpl_demo --parallel
-	$(DEMO_BIN)
+	cmake --build $(BUILD_DIR_DEMO) --config $(BUILD_TYPE) --target aw_tpl_examples --parallel
+	for example in $(DEMO_DIR)/aw_tpl_example_*$(EXT); do echo "=== $$example"; "$$example" || exit 1; done
 
 clean:
 	rm -rf $(BUILD_DIR)

@@ -5,6 +5,8 @@
 #include <chrono>
 #include <vector>
 #include <mutex>
+#include <string>
+#include <type_traits>
 
 using namespace std::chrono_literals;
 using namespace aw::tpl;
@@ -330,4 +332,48 @@ TEST_CASE("Two cancel_after calls: the earlier deadline wins", "[cancellation][t
     bool fired = false;
     for (int i = 0; i < 400 && !(fired = cts.token().is_cancellation_requested()); ++i) std::this_thread::sleep_for(5ms);
     REQUIRE(fired);
+}
+
+TEST_CASE("CancellationTokenSource(delay) cancels itself after the timeout", "[cancellation][timeout]") {
+    CancellationTokenSource cts(30ms);
+    REQUIRE_FALSE(cts.token().is_cancellation_requested());
+    bool fired = false;
+    for (int i = 0; i < 400 && !(fired = cts.token().is_cancellation_requested()); ++i) std::this_thread::sleep_for(5ms);
+    REQUIRE(fired);
+}
+
+TEST_CASE("timeout pattern: OperationCanceledException is converted to TimeoutException", "[cancellation][timeout]") {
+    auto long_running = [](CancellationToken token) -> Task<std::string> {
+        co_await async_sleep(5000ms, token);
+        co_return std::string("never");
+    };
+    auto with_timeout = [&](std::chrono::milliseconds limit) -> Task<std::string> {
+        CancellationTokenSource cts(limit);
+        try {
+            co_return co_await long_running(cts.token());
+        } catch (const OperationCanceledException&) {
+            throw TimeoutException("The operation timed out.");
+        }
+    };
+
+    const auto start = std::chrono::steady_clock::now();
+    REQUIRE_THROWS_AS(with_timeout(50ms).result(), TimeoutException);
+    REQUIRE(std::chrono::steady_clock::now() - start < 3000ms);
+}
+
+TEST_CASE("timeout does not fire when the operation finishes in time", "[cancellation][timeout]") {
+    CancellationTokenSource cts(2000ms);
+    auto quick = [](CancellationToken token) -> Task<int> {
+        co_await async_sleep(10ms, token);
+        co_return 7;
+    };
+    REQUIRE(quick(cts.token()).result() == 7);
+    REQUIRE_FALSE(cts.token().is_cancellation_requested());
+}
+
+TEST_CASE("TimeoutException is a std::runtime_error with a default message", "[cancellation][timeout]") {
+    TimeoutException ex;
+    REQUIRE(std::string(ex.what()) == "The operation timed out.");
+    REQUIRE(std::string(TimeoutException("custom").what()) == "custom");
+    static_assert(std::is_base_of_v<std::runtime_error, TimeoutException>);
 }

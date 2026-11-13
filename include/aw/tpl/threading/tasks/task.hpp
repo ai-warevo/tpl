@@ -79,6 +79,30 @@ public:
     ~Task() = default;
 
     /**
+     * @brief Views a @c Task<U> as the non-generic @c Task<void> (like C# upcasting @c Task<T> to @c Task).
+     *        Both handles share one state, so the result is the *same* task: it compares equal to the
+     *        source and completes (or fails) together with it. Awaiting it observes completion and
+     *        rethrows a failure, but yields no value and never consumes a move-only result.
+     * @tparam U Result type of the source task (non-void).
+     * @param[in] other Source task.
+     */
+    template <typename U>
+        requires (std::is_void_v<T> && !std::is_void_v<U>)
+    Task(const Task<U>& other) noexcept  // NOLINT(google-explicit-constructor): implicit like C# upcast
+        : state_(other.state_) {}
+
+    /**
+     * @brief Identity comparison (equivalent to C# reference equality of tasks).
+     *        True if both handles refer to the same underlying task, also across @c Task<T> and
+     *        @c Task<void> views of it. Typical use: @c if (co_await when_any(a, b) == a).
+     */
+    template <typename U>
+    bool operator==(const Task<U>& other) const noexcept {
+        return static_cast<const TaskState<void>*>(state_.get()) ==
+               static_cast<const TaskState<void>*>(other.state_.get());
+    }
+
+    /**
      * @brief Checks whether the task has already finished without suspending.
      * @return True if result is already available.
      */
@@ -191,9 +215,9 @@ public:
     }
 
 private:
-    /**
-     * @brief Blocks the calling thread on the completion semaphore until the task finishes.
-     */
+    template <typename>
+    friend class Task;
+
     void require_state() const {
         if (!state_) {
             throw std::logic_error("Task has no shared state (default-constructed or moved-from).");

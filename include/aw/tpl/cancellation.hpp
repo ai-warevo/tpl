@@ -11,6 +11,7 @@
 #include <memory>
 #include <mutex>
 #include <stdexcept>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -23,6 +24,18 @@ namespace aw::tpl {
 class OperationCanceledException : public std::runtime_error {
 public:
     OperationCanceledException();
+};
+
+/**
+ * @class TimeoutException
+ * @brief Thrown when an operation does not finish in time (equivalent to C# @c System.TimeoutException).
+ *        Typical use: catch @c OperationCanceledException raised by a @c CancellationTokenSource with a
+ *        timeout and rethrow it as @c TimeoutException.
+ */
+class TimeoutException : public std::runtime_error {
+public:
+    TimeoutException();
+    explicit TimeoutException(const std::string& message);
 };
 
 namespace detail {
@@ -127,6 +140,14 @@ private:
 class CancellationTokenSource {
 public:
     CancellationTokenSource();
+
+    /**
+     * @brief Creates a source that cancels itself after @p delay
+     *        (equivalent to C# @c new CancellationTokenSource(TimeSpan)).
+     *        Same as default construction followed by @c cancel_after(delay).
+     * @param[in] delay Time interval after which cancellation is triggered.
+     */
+    explicit CancellationTokenSource(std::chrono::milliseconds delay);
 
     /**
      * @brief Returns a @c CancellationToken linked to this source.

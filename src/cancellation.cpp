@@ -9,6 +9,12 @@ namespace aw::tpl {
 OperationCanceledException::OperationCanceledException()
     : std::runtime_error("Operation was canceled.") {}
 
+TimeoutException::TimeoutException()
+    : std::runtime_error("The operation timed out.") {}
+
+TimeoutException::TimeoutException(const std::string& message)
+    : std::runtime_error(message) {}
+
 namespace detail {
 
 void CancellationState::cancel() {
@@ -106,6 +112,11 @@ CancellationToken::CancellationToken(std::shared_ptr<detail::CancellationState> 
 
 CancellationTokenSource::CancellationTokenSource()
     : state_(std::make_shared<detail::CancellationState>()) {}
+
+CancellationTokenSource::CancellationTokenSource(std::chrono::milliseconds delay)
+    : CancellationTokenSource() {
+    cancel_after(delay);
+}
 
 CancellationToken CancellationTokenSource::token() const noexcept {
     // A moved-from source has no state; it hands out a default token that can never be canceled.

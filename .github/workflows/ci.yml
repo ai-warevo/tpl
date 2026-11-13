@@ -49,13 +49,23 @@ jobs:
           cmake --build build --config Release --parallel
           cmake --install build --config Release
 
-      - name: Run Demo Example (Windows)
+      - name: Run Examples (Windows)
         if: runner.os == 'Windows'
-        run: .\build\examples\Release\aw_tpl_demo.exe
+        shell: pwsh
+        run: |
+          Get-ChildItem .\build\examples\Release\aw_tpl_example_*.exe | ForEach-Object {
+            Write-Host "=== $($_.Name)"
+            & $_.FullName
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
 
-      - name: Run Demo Example (Unix)
+      - name: Run Examples (Unix)
         if: runner.os != 'Windows'
-        run: ./build/examples/aw_tpl_demo
+        run: |
+          for example in ./build/examples/aw_tpl_example_*; do
+            echo "=== $example"
+            "$example"
+          done
 
       - name: Package Artifacts (Windows)
         if: runner.os == 'Windows'
