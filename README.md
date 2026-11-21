@@ -3,7 +3,6 @@
 [![C++23](https://img.shields.io/badge/C++-%2300599C.svg?logo=c%2B%2B&logoColor=white)](https://cppreference.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 <br />
-[![PR Fast](https://github.com/ai-warevo/tpl/actions/workflows/pr-fast.yml/badge.svg)](https://github.com/ai-warevo/tpl/actions/workflows/pr-fast.yml)
 [![Weekly Deep](https://github.com/ai-warevo/tpl/actions/workflows/weekly-deep.yml/badge.svg)](https://github.com/ai-warevo/tpl/actions/workflows/weekly-deep.yml)
 [![Release](https://github.com/ai-warevo/tpl/actions/workflows/release.yml/badge.svg)](https://github.com/ai-warevo/tpl/actions/workflows/release.yml)
 <br />
