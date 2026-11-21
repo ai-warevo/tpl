@@ -2,12 +2,11 @@
 
 [![C++23](https://img.shields.io/badge/C++-%2300599C.svg?logo=c%2B%2B&logoColor=white)](https://cppreference.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Coverage](https://raw.githubusercontent.com/ai-warevo/tpl/refs/heads/badges/coverage.svg)](https://ai-warevo.github.io/tpl)
 <br />
 [![PR Build](https://github.com/ai-warevo/tpl/actions/workflows/pr-build.yml/badge.svg)](https://github.com/ai-warevo/tpl/actions/workflows/pr-build.yml)
 [![Weekly Deep](https://github.com/ai-warevo/tpl/actions/workflows/weekly-deep.yml/badge.svg)](https://github.com/ai-warevo/tpl/actions/workflows/weekly-deep.yml)
 [![Release](https://github.com/ai-warevo/tpl/actions/workflows/release.yml/badge.svg)](https://github.com/ai-warevo/tpl/actions/workflows/release.yml)
-<br />
-[![Coverage](https://raw.githubusercontent.com/ai-warevo/tpl/refs/heads/badges/coverage.svg)](https://ai-warevo.github.io/tpl)
 
 > **C# Task Parallel Library (TPL) ergonomics brought to modern C++23 coroutines.**  
 > *Part of the **[ai-warevo](https://github.com/ai-warevo)** ecosystem — evoked into existence via prompt engineering.* 🪄
