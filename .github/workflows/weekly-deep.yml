@@ -43,4 +43,4 @@ jobs:
       toolchain: gcc15
       cmake_extra_args: '-DAW_TPL_BUILD_TESTS=ON -DAW_ENABLE_COVERAGE=ON'
       gcovr_source_filter: ''
-      gcovr_exclude: '*/_deps/* examples/*'
+      gcovr_exclude: '.*/_deps/.* examples/.*'
