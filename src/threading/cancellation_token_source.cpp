@@ -36,7 +36,7 @@ void CancellationTokenSource::cancel_after(std::chrono::milliseconds delay) {
             st->cancel();
         } catch (...) {
             // A throwing user callback must not take the timer coroutine down; all callbacks already ran.
-            std::current_exception(); // swallow: assignment to temporary discards it
+            (void)std::current_exception(); // swallow
         }
         co_return;
     }(std::move(state), delay)
