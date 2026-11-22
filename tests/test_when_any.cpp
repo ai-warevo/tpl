@@ -269,3 +269,42 @@ TEST_CASE("WhenAnyAwaiter::await_suspend is not noexcept", "[when_any][noexcept]
         !noexcept(std::declval<threading::tasks::detail::WhenAnyAwaiter&>().await_suspend(std::noop_coroutine())));
     SUCCEED();
 }
+
+TEST_CASE("when_any with single void task", "[when_any]") {
+    auto task = []() -> Task<void> { co_return; };
+    auto winner_checker = [](Task<void> t) -> Task<void> {
+        Task<Task<void>> winner = when_any(t);
+        Task<void> completed = co_await winner;
+        REQUIRE(completed == t);
+        co_await completed;
+    };
+    REQUIRE_NOTHROW(winner_checker(task()).wait());
+}
+
+TEST_CASE("when_any with already completed empty task", "[when_any]") {
+    std::vector<Task<int>> tasks;
+    tasks.emplace_back();  // Empty task
+    
+    auto awaiter = [](std::vector<Task<int>> ts) -> Task<bool> {
+        Task<Task<int>> winner = when_any(std::move(ts));
+        (void)co_await winner;  // Explicitly ignore result
+        co_return true;
+    };
+    
+    REQUIRE(awaiter(std::move(tasks)).result());
+}
+
+TEST_CASE("when_any result is move-only Task<Task<T>>", "[when_any][move]") {
+    auto make_task = []() -> Task<std::unique_ptr<int>> {
+        co_return std::make_unique<int>(99);
+    };
+    
+    auto wrapper = [](Task<std::unique_ptr<int>> t) -> Task<int> {
+        Task<Task<std::unique_ptr<int>>> winner = when_any(t);
+        Task<std::unique_ptr<int>> completed = co_await winner;
+        auto ptr = co_await completed;
+        co_return *ptr;
+    };
+    
+    REQUIRE(wrapper(make_task()).result() == 99);
+}

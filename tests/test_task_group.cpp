@@ -107,3 +107,27 @@ TEST_CASE("TaskGroup releases several async waiters", "[task_group]") {
     b.wait();
     c.wait();
 }
+
+TEST_CASE("TaskGroup add with count greater than 1", "[task_group]") {
+    TaskGroup group;
+    group.add(5);
+    REQUIRE(group.pending() == 5);
+    group.done();
+    REQUIRE(group.pending() == 4);
+    group.done();
+    REQUIRE(group.pending() == 3);
+    group.done();
+    REQUIRE(group.pending() == 2);
+    group.done();
+    group.done();
+    REQUIRE(group.pending() == 0);
+}
+
+TEST_CASE("TaskGroup multiple done calls throw correctly", "[task_group]") {
+    TaskGroup group;
+    REQUIRE_THROWS_AS(group.done(), std::logic_error);
+    
+    group.add();
+    group.done();
+    REQUIRE_THROWS_AS(group.done(), std::logic_error);
+}

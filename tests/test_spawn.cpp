@@ -134,3 +134,15 @@ TEST_CASE("co_spawn group can be awaited from a coroutine", "[spawn]") {
     drain(group).wait();
     REQUIRE(group.pending() == 0);
 }
+
+TEST_CASE("co_spawn with group and void task success", "[spawn]") {
+    TaskGroup group;
+    std::atomic<bool> handler_called{false};
+    
+    co_spawn(group, []() -> Task<void> { co_return; }(), [&](std::exception_ptr) {
+        handler_called = true;
+    });
+    
+    group.wait();
+    REQUIRE_FALSE(handler_called);
+}

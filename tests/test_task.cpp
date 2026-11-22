@@ -273,7 +273,7 @@ Task<std::vector<std::unique_ptr<int>>> make_ptr_vector() {
     co_return v;
 }
 
-Task<std::unique_ptr<int>> make_ptr_task(int v) {
+Task<std::unique_ptr<int>> make_ptr_task([[maybe_unused]] int v) {
     co_await async_sleep(5ms);
     co_return std::make_unique<int>(v);
 }
@@ -421,4 +421,97 @@ TEST_CASE("Task<>::run covers void, by-value capture and move-only callables", "
 TEST_CASE("Task::await_suspend is not noexcept", "[task][noexcept]") {
     static_assert(!noexcept(std::declval<Task<int>&>().await_suspend(std::noop_coroutine())));
     SUCCEED();
+}
+
+TEST_CASE("Default-constructed Task<int> throws on result()", "[task][stateless]") {
+    Task<int> empty;
+    REQUIRE_THROWS_AS(empty.result(), std::exception);
+}
+
+TEST_CASE("Default-constructed Task<void> throws on wait()", "[task][stateless]") {
+    Task<void> empty;
+    REQUIRE_THROWS_AS(empty.wait(), std::exception);
+}
+
+TEST_CASE("Default-constructed Task<int> throws on co_await", "[task][stateless]") {
+    auto awaiter = [](Task<int> t) -> Task<bool> {
+        try {
+            (void)co_await t;
+            co_return false;
+        } catch (const std::exception&) {
+            co_return true;
+        }
+    };
+    REQUIRE(awaiter(Task<int>{}).result());
+}
+
+TEST_CASE("Default-constructed Task<void> throws on co_await", "[task][stateless]") {
+    auto awaiter = [](Task<void> t) -> Task<bool> {
+        try {
+            co_await t;
+            co_return false;
+        } catch (const std::exception&) {
+            co_return true;
+        }
+    };
+    REQUIRE(awaiter(Task<void>{}).result());
+}
+
+TEST_CASE("Moved-from Task<int> throws on result()", "[task][stateless]") {
+    auto make_task = []() -> Task<int> { co_return 42; };
+    Task<int> t = make_task();
+    Task<int> moved = std::move(t);
+    REQUIRE_THROWS_AS(t.result(), std::exception);
+}
+
+TEST_CASE("Moved-from Task<void> throws on wait()", "[task][stateless]") {
+    auto make_task = []() -> Task<void> { co_return; };
+    Task<void> t = make_task();
+    Task<void> moved = std::move(t);
+    REQUIRE_THROWS_AS(t.wait(), std::exception);
+}
+
+TEST_CASE("Task equality with itself", "[task][equality]") {
+    auto make_task = []() -> Task<int> { co_return 5; };
+    Task<int> t = make_task();
+    REQUIRE(t == t);
+}
+
+TEST_CASE("Task equality between different tasks", "[task][equality]") {
+    auto make_task = []() -> Task<int> { co_return 5; };
+    Task<int> t1 = make_task();
+    Task<int> t2 = make_task();
+    REQUIRE_FALSE(t1 == t2);
+}
+
+TEST_CASE("Task equality with Task<void> view", "[task][equality]") {
+    auto make_task = []() -> Task<int> { co_return 5; };
+    Task<int> t = make_task();
+    Task<void> view{t};
+    REQUIRE(t == view);
+    REQUIRE(view == t);
+}
+
+TEST_CASE("Empty tasks are equal", "[task][equality]") {
+    Task<int> empty1;
+    Task<int> empty2;
+    REQUIRE(empty1 == empty2);
+}
+
+TEST_CASE("Three coroutines await the same Task<int>", "[task]") {
+    auto slow = []() -> Task<int> {
+        co_await async_sleep(50ms);
+        co_return 7;
+    };
+    
+    Task<int> shared = slow();
+    
+    auto consumer = [](Task<int> t) -> Task<int> {
+        co_return co_await t;
+    };
+    
+    auto result1 = when_all(consumer(shared), consumer(shared), consumer(shared)).result();
+    REQUIRE(std::get<0>(result1) == 7);
+    REQUIRE(std::get<1>(result1) == 7);
+    REQUIRE(std::get<2>(result1) == 7);
 }

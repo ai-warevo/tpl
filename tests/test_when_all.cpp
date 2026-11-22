@@ -182,3 +182,37 @@ TEST_CASE("variadic when_all supports move-only and container results", "[when_a
     REQUIRE(*p == 3);
     REQUIRE(*v.at(0) == 4);
 }
+
+TEST_CASE("when_all with single task", "[when_all]") {
+    auto task = []() -> Task<int> { co_return 42; };
+    auto result = when_all(task()).result();
+    REQUIRE(std::get<0>(result) == 42);
+}
+
+TEST_CASE("when_all with heterogeneous void task", "[when_all]") {
+    auto void_task = []() -> Task<void> { co_return; };
+    auto int_task = []() -> Task<int> { co_return 5; };
+    
+    auto combined = [](Task<void> v, Task<int> i) -> Task<void> {
+        (void)co_await when_all(v, i);  // Explicitly ignore result
+    };
+    
+    REQUIRE_NOTHROW(combined(void_task(), int_task()).wait());
+}
+
+TEST_CASE("when_all with vector of move-only result tasks", "[when_all][move]") {
+    auto make_ptr = [](int val) -> Task<std::unique_ptr<int>> {
+        co_return std::make_unique<int>(val);
+    };
+    
+    std::vector<Task<std::unique_ptr<int>>> tasks;
+    tasks.push_back(make_ptr(1));
+    tasks.push_back(make_ptr(2));
+    tasks.push_back(make_ptr(3));
+    
+    auto results = when_all(std::move(tasks)).result();
+    REQUIRE(results.size() == 3);
+    REQUIRE(*results[0] == 1);
+    REQUIRE(*results[1] == 2);
+    REQUIRE(*results[2] == 3);
+}

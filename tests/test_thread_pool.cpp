@@ -295,3 +295,20 @@ TEST_CASE("schedule_on_pool targets the given pool", "[thread_pool][affinity]") 
     }
     REQUIRE(threading::detail::current_pool() == nullptr);
 }
+
+TEST_CASE("ThreadPool with explicit thread count construction", "[thread_pool]") {
+    ThreadPool pool(4);
+    auto task = []() -> Task<int> {
+        co_return 42;
+    };
+    REQUIRE(task().result() == 42);
+}
+
+TEST_CASE("ThreadPool handles exceptions in scheduled work", "[thread_pool]") {
+    ThreadPool pool(2);
+    auto throwing_task = []() -> Task<void> {
+        throw std::runtime_error("test exception");
+        co_return;
+    };
+    REQUIRE_THROWS_AS(throwing_task().wait(), std::runtime_error);
+}

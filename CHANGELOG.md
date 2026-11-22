@@ -14,6 +14,11 @@ Maintainer notes (see AGENTS.md, "Changelog & releases"):
 
 ## [Unreleased]
 
+### Added
+
+- Comprehensive test coverage for edge cases: Task stateless exceptions, CancellationToken operations, exception messages, and move-only result handling
+- Tests for TaskGroup, ThreadPool, when_any/when_all with heterogeneous types, and co_spawn edge cases
+
 ## [4.2.5] - 2026-11-22
 
 ### Changed

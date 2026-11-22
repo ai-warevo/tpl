@@ -389,3 +389,78 @@ TEST_CASE("TimeoutException is a std::exception with a default message", "[cance
     REQUIRE(std::string(TimeoutException("custom").what()) == "custom");
     static_assert(std::is_base_of_v<std::exception, TimeoutException>);
 }
+
+TEST_CASE("CancellationToken::none unregister returns false", "[cancellation]") {
+    auto token = CancellationToken::none();
+    REQUIRE_FALSE(token.unregister_callback(1));
+    REQUIRE_FALSE(token.unregister_callback(999));
+}
+
+TEST_CASE("CancellationToken::none registered_callback_count is zero", "[cancellation]") {
+    auto token = CancellationToken::none();
+    REQUIRE(token.registered_callback_count() == 0);
+    token.register_callback([] {});
+    REQUIRE(token.registered_callback_count() == 0);
+}
+
+TEST_CASE("CancellationToken throw_if_cancellation_requested with active token", "[cancellation]") {
+    CancellationTokenSource cts;
+    auto token = cts.token();
+    
+    REQUIRE_NOTHROW(token.throw_if_cancellation_requested());
+    
+    cts.cancel();
+    REQUIRE_THROWS_AS(token.throw_if_cancellation_requested(), OperationCanceledException);
+}
+
+TEST_CASE("OperationCanceledException has default message", "[cancellation]") {
+    OperationCanceledException ex;
+    REQUIRE(std::string(ex.what()) == "Operation was canceled.");
+    static_assert(std::is_base_of_v<std::exception, OperationCanceledException>);
+}
+
+TEST_CASE("TaskAlreadyMovedException has default message", "[task]") {
+    TaskAlreadyMovedException ex;
+    REQUIRE(std::string(ex.what()) == "Task move-only value has already been moved out via co_await or result().");
+    static_assert(std::is_base_of_v<std::exception, TaskAlreadyMovedException>);
+}
+
+TEST_CASE("CancellationTokenSource multiple tokens share state", "[cancellation]") {
+    CancellationTokenSource cts;
+    auto token1 = cts.token();
+    auto token2 = cts.token();
+    
+    REQUIRE_FALSE(token1.is_cancellation_requested());
+    REQUIRE_FALSE(token2.is_cancellation_requested());
+    
+    cts.cancel();
+    
+    REQUIRE(token1.is_cancellation_requested());
+    REQUIRE(token2.is_cancellation_requested());
+}
+
+TEST_CASE("CancellationTokenSource token survives source destruction", "[cancellation]") {
+    CancellationToken token;
+    {
+        CancellationTokenSource cts;
+        token = cts.token();
+        cts.cancel();
+    }
+    REQUIRE(token.is_cancellation_requested());
+}
+
+TEST_CASE("async_sleep with zero duration completes immediately", "[sleep]") {
+    auto sleep_zero = []() -> Task<bool> {
+        co_await async_sleep(0ms);
+        co_return true;
+    };
+    REQUIRE(sleep_zero().result());
+}
+
+TEST_CASE("async_sleep with negative duration completes immediately", "[sleep]") {
+    auto sleep_negative = []() -> Task<bool> {
+        co_await async_sleep(-100ms);
+        co_return true;
+    };
+    REQUIRE(sleep_negative().result());
+}
