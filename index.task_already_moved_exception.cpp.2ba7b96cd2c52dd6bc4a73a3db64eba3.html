@@ -38,8 +38,8 @@
     <div class="col-sm-12 col-lg-3 float-left d-flex flex-column text-right flex-justify-end pr-3">
       <div class="d-flex">
         <div class="mr-2">Lines:</div>
-        <div class="mr-2" style="margin: auto;">3 / 5</div>
-        <div class="Label--minw"><span class="coverage-low IssueLabel color-fg-on-emphasis mr-1">60.0%</span></div>
+        <div class="mr-2" style="margin: auto;">5 / 5</div>
+        <div class="Label--minw"><span class="coverage-high IssueLabel color-fg-on-emphasis mr-1">100.0%</span></div>
       </div>
       <div class="d-flex">
         <div class="mr-2">Branches:</div>
@@ -48,8 +48,8 @@
       </div>
       <div class="d-flex">
         <div class="mr-2">Functions:</div>
-        <div class="mr-2" style="margin: auto;">1 / 2</div>
-        <div class="Label--minw"><span class="coverage-low IssueLabel color-fg-on-emphasis mr-1">50.0%</span></div>
+        <div class="mr-2" style="margin: auto;">2 / 2</div>
+        <div class="Label--minw"><span class="coverage-high IssueLabel color-fg-on-emphasis mr-1">100.0%</span></div>
       </div>
     </div>
   </div>
@@ -70,17 +70,17 @@
   </div>
   <div class="Box-row Box-row--focus-gray py-2 d-flex">
     <div role="gridcell" class="color-fg-muted flex-auto min-width-0 col-md-2"><a href="#L5">aw::tpl::threading::tasks::TaskAlreadyMovedException::TaskAlreadyMovedException() (src/threading/tasks/task_already_moved_exception.cpp:5)</a>    </div>
-    <div role="gridcell" class="color-fg-muted flex-auto min-width-0 d-flex flex-justify-end flex-wrap flex-items-baseline" data-sort="8">called 8 times</div>
+    <div role="gridcell" class="color-fg-muted flex-auto min-width-0 d-flex flex-justify-end flex-wrap flex-items-baseline" data-sort="9">called 9 times</div>
     <div role="gridcell" class="color-fg-muted d-flex flex-justify-end flex-wrap col-2">100.0%</div>
     <div role="gridcell" class="color-fg-muted d-flex flex-justify-end flex-wrap col-2">100.0%</div>
     <div role="gridcell" class="color-fg-muted d-flex flex-justify-end flex-wrap col-2">55.0%</div>
   </div>
   <div class="Box-row Box-row--focus-gray py-2 d-flex">
     <div role="gridcell" class="color-fg-muted flex-auto min-width-0 col-md-2"><a href="#L9">aw::tpl::threading::tasks::TaskAlreadyMovedException::what() const (src/threading/tasks/task_already_moved_exception.cpp:9)</a>    </div>
-    <div role="gridcell" class="color-fg-muted flex-auto min-width-0 d-flex flex-justify-end flex-wrap flex-items-baseline" data-sort="0">not called</div>
-    <div role="gridcell" class="color-fg-muted d-flex flex-justify-end flex-wrap col-2">0.0%</div>
+    <div role="gridcell" class="color-fg-muted flex-auto min-width-0 d-flex flex-justify-end flex-wrap flex-items-baseline" data-sort="1">called 1 time</div>
+    <div role="gridcell" class="color-fg-muted d-flex flex-justify-end flex-wrap col-2">100.0%</div>
     <div role="gridcell" class="color-fg-muted d-flex flex-justify-end flex-wrap col-2">-%</div>
-    <div role="gridcell" class="color-fg-muted d-flex flex-justify-end flex-wrap col-2">0.0%</div>
+    <div role="gridcell" class="color-fg-muted d-flex flex-justify-end flex-wrap col-2">100.0%</div>
   </div>
 </div>  </details>
 </div>
@@ -91,8 +91,7 @@
   <div class="Box-header d-flex flex-space-between sticky">
     src/threading/tasks/task_already_moved_exception.cpp
     <div class="toggle-buttons">
-      <button type="button" class="button_toggle_coveredLine show_coveredLine" value="coveredLine" title="Toggle covered lines">3 covered</button>
-      <button type="button" class="button_toggle_uncoveredLine show_uncoveredLine" value="uncoveredLine" title="Toggle uncovered lines">2 uncovered</button>
+      <button type="button" class="button_toggle_coveredLine show_coveredLine" value="coveredLine" title="Toggle covered lines">5 covered</button>
     </div>
     <div class="nav">
       <a class="nav prev" href="index.when_any_watcher.cpp.750c9f722a98c1eaec6e57e176fa889f.html"></a>
@@ -140,7 +139,7 @@
         <td class="text-right src linenos"><a class="normal" id="L5" href="#L5">5</a></td>
         <td class="text-right src linenos ws-unset">
         </td>
-        <td class="linecount coveredLine show_coveredLine pr-2 pl-2 color-fg-muted text-right">8</td>
+        <td class="linecount coveredLine show_coveredLine pr-2 pl-2 color-fg-muted text-right">9</td>
         <td class="src coveredLine show_coveredLine"><span class="n">TaskAlreadyMovedException</span><span class="o">::</span><span class="n">TaskAlreadyMovedException</span><span class="p">()</span></td>
       </tr>
       <tr>
@@ -149,11 +148,11 @@
           <details class="normal details-overlay">
             <summary>1/1</summary>
             <div class="text-left position-absolute color-bg-subtle p-3 mt-2" style="z-index: 1;">
-              <div class="color-taken-branch">&check; Branch  5 &rightarrow; 6 taken 8 times.</div>
+              <div class="color-taken-branch">&check; Branch  5 &rightarrow; 6 taken 9 times.</div>
             </div>
           </details>
         </td>
-        <td class="linecount coveredLine show_coveredLine pr-2 pl-2 color-fg-muted text-right">8</td>
+        <td class="linecount coveredLine show_coveredLine pr-2 pl-2 color-fg-muted text-right">9</td>
         <td class="src coveredLine show_coveredLine"><span class="w">    </span><span class="o">:</span><span class="w"> </span><span class="n">message_</span><span class="p">(</span><span class="s">&quot;Task move-only value has already been moved out via co_await or result().&quot;</span><span class="p">),</span></td>
       </tr>
       <tr>
@@ -162,11 +161,11 @@
           <details class="normal details-overlay">
             <summary>1/1</summary>
             <div class="text-left position-absolute color-bg-subtle p-3 mt-2" style="z-index: 1;">
-              <div class="color-taken-branch">&check; Branch  9 &rightarrow; 10 taken 8 times.</div>
+              <div class="color-taken-branch">&check; Branch  9 &rightarrow; 10 taken 9 times.</div>
             </div>
           </details>
         </td>
-        <td class="linecount coveredLine show_coveredLine pr-2 pl-2 color-fg-muted text-right">32</td>
+        <td class="linecount coveredLine show_coveredLine pr-2 pl-2 color-fg-muted text-right">36</td>
         <td class="src coveredLine show_coveredLine"><span class="w">      </span><span class="n">reason_</span><span class="p">(</span><span class="s">&quot;Result was already extracted in a prior co_await or result() call.&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">{}</span></td>
       </tr>
       <tr>
@@ -180,15 +179,15 @@
         <td class="text-right src linenos"><a class="normal" id="L9" href="#L9">9</a></td>
         <td class="text-right src linenos ws-unset">
         </td>
-        <td class="linecount uncoveredLine show_uncoveredLine pr-2 pl-2 color-fg-muted text-right">&cross;</td>
-        <td class="src uncoveredLine show_uncoveredLine"><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">TaskAlreadyMovedException</span><span class="o">::</span><span class="n">what</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="k">noexcept</span><span class="w"> </span><span class="p">{</span></td>
+        <td class="linecount coveredLine show_coveredLine pr-2 pl-2 color-fg-muted text-right">1</td>
+        <td class="src coveredLine show_coveredLine"><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">TaskAlreadyMovedException</span><span class="o">::</span><span class="n">what</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="k">noexcept</span><span class="w"> </span><span class="p">{</span></td>
       </tr>
       <tr>
         <td class="text-right src linenos"><a class="normal" id="L10" href="#L10">10</a></td>
         <td class="text-right src linenos ws-unset">
         </td>
-        <td class="linecount uncoveredLine show_uncoveredLine pr-2 pl-2 color-fg-muted text-right">&cross;</td>
-        <td class="src uncoveredLine show_uncoveredLine"><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">message_</span><span class="p">.</span><span class="n">c_str</span><span class="p">();</span></td>
+        <td class="linecount coveredLine show_coveredLine pr-2 pl-2 color-fg-muted text-right">1</td>
+        <td class="src coveredLine show_coveredLine"><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">message_</span><span class="p">.</span><span class="n">c_str</span><span class="p">();</span></td>
       </tr>
       <tr>
         <td class="text-right src linenos"><a class="normal" id="L11" href="#L11">11</a></td>
@@ -225,7 +224,7 @@
         <hr class="block-separator"/>
         <footer class="text-center">
           Created using <a href="http://gcovr.com/en/8.7">GCOVR (Version 8.7)</a>
-          at 2026-11-22 14:13:16+00:00
+          at 2026-11-22 15:23:22+00:00
         </footer>
       </div>
     </div>

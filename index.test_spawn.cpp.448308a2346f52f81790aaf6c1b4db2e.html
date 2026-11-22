@@ -38,18 +38,18 @@
     <div class="col-sm-12 col-lg-3 float-left d-flex flex-column text-right flex-justify-end pr-3">
       <div class="d-flex">
         <div class="mr-2">Lines:</div>
-        <div class="mr-2" style="margin: auto;">86 / 86</div>
-        <div class="Label--minw"><span class="coverage-high IssueLabel color-fg-on-emphasis mr-1">100.0%</span></div>
+        <div class="mr-2" style="margin: auto;">94 / 97</div>
+        <div class="Label--minw"><span class="coverage-high IssueLabel color-fg-on-emphasis mr-1">96.9%</span></div>
       </div>
       <div class="d-flex">
         <div class="mr-2">Branches:</div>
-        <div class="mr-2" style="margin: auto;">112 / 168</div>
-        <div class="Label--minw"><span class="coverage-low IssueLabel color-fg-on-emphasis mr-1">66.7%</span></div>
+        <div class="mr-2" style="margin: auto;">123 / 187</div>
+        <div class="Label--minw"><span class="coverage-low IssueLabel color-fg-on-emphasis mr-1">65.8%</span></div>
       </div>
       <div class="d-flex">
         <div class="mr-2">Functions:</div>
-        <div class="mr-2" style="margin: auto;">21 / 22</div>
-        <div class="Label--minw"><span class="coverage-high IssueLabel color-fg-on-emphasis mr-1">95.5%</span></div>
+        <div class="mr-2" style="margin: auto;">23 / 25</div>
+        <div class="Label--minw"><span class="coverage-high IssueLabel color-fg-on-emphasis mr-1">92.0%</span></div>
       </div>
     </div>
   </div>
@@ -181,6 +181,27 @@
     <div role="gridcell" class="color-fg-muted d-flex flex-justify-end flex-wrap col-2">51.2%</div>
   </div>
   <div class="Box-row Box-row--focus-gray py-2 d-flex">
+    <div role="gridcell" class="color-fg-muted flex-auto min-width-0 col-md-2"><a href="#L138">CATCH2_INTERNAL_TEST_20() (tests/test_spawn.cpp:138)</a>    </div>
+    <div role="gridcell" class="color-fg-muted flex-auto min-width-0 d-flex flex-justify-end flex-wrap flex-items-baseline" data-sort="1">called 1 time</div>
+    <div role="gridcell" class="color-fg-muted d-flex flex-justify-end flex-wrap col-2">100.0%</div>
+    <div role="gridcell" class="color-fg-muted d-flex flex-justify-end flex-wrap col-2">77.8%</div>
+    <div role="gridcell" class="color-fg-muted d-flex flex-justify-end flex-wrap col-2">48.8%</div>
+  </div>
+  <div class="Box-row Box-row--focus-gray py-2 d-flex">
+    <div role="gridcell" class="color-fg-muted flex-auto min-width-0 col-md-2"><a href="#L142">CATCH2_INTERNAL_TEST_20()::{lambda()#1}::operator()() const (tests/test_spawn.cpp:142)</a>    </div>
+    <div role="gridcell" class="color-fg-muted flex-auto min-width-0 d-flex flex-justify-end flex-wrap flex-items-baseline" data-sort="1">called 1 time</div>
+    <div role="gridcell" class="color-fg-muted d-flex flex-justify-end flex-wrap col-2">100.0%</div>
+    <div role="gridcell" class="color-fg-muted d-flex flex-justify-end flex-wrap col-2">40.0%</div>
+    <div role="gridcell" class="color-fg-muted d-flex flex-justify-end flex-wrap col-2">50.0%</div>
+  </div>
+  <div class="Box-row Box-row--focus-gray py-2 d-flex">
+    <div role="gridcell" class="color-fg-muted flex-auto min-width-0 col-md-2"><a href="#L142">CATCH2_INTERNAL_TEST_20()::{lambda(std::__exception_ptr::exception_ptr)#1}::operator()(std::__exception_ptr::exception_ptr) const (tests/test_spawn.cpp:142)</a>    </div>
+    <div role="gridcell" class="color-fg-muted flex-auto min-width-0 d-flex flex-justify-end flex-wrap flex-items-baseline" data-sort="0">not called</div>
+    <div role="gridcell" class="color-fg-muted d-flex flex-justify-end flex-wrap col-2">0.0%</div>
+    <div role="gridcell" class="color-fg-muted d-flex flex-justify-end flex-wrap col-2">-%</div>
+    <div role="gridcell" class="color-fg-muted d-flex flex-justify-end flex-wrap col-2">0.0%</div>
+  </div>
+  <div class="Box-row Box-row--focus-gray py-2 d-flex">
     <div role="gridcell" class="color-fg-muted flex-auto min-width-0 col-md-2"><a href="#L54">CATCH2_INTERNAL_TEST_4() (tests/test_spawn.cpp:54)</a>    </div>
     <div role="gridcell" class="color-fg-muted flex-auto min-width-0 d-flex flex-justify-end flex-wrap flex-items-baseline" data-sort="1">called 1 time</div>
     <div role="gridcell" class="color-fg-muted d-flex flex-justify-end flex-wrap col-2">100.0%</div>
@@ -231,8 +252,9 @@
   <div class="Box-header d-flex flex-space-between sticky">
     tests/test_spawn.cpp
     <div class="toggle-buttons">
-      <button type="button" class="button_toggle_coveredLine show_coveredLine" value="coveredLine" title="Toggle covered lines">69 covered</button>
-      <button type="button" class="button_toggle_partialCoveredLine show_partialCoveredLine" value="partialCoveredLine" title="Toggle partial covered lines">17 partial covered</button>
+      <button type="button" class="button_toggle_coveredLine show_coveredLine" value="coveredLine" title="Toggle covered lines">75 covered</button>
+      <button type="button" class="button_toggle_uncoveredLine show_uncoveredLine" value="uncoveredLine" title="Toggle uncovered lines">2 uncovered</button>
+      <button type="button" class="button_toggle_partialCoveredLine show_partialCoveredLine" value="partialCoveredLine" title="Toggle partial covered lines">19 partial covered</button>
     </div>
     <div class="nav">
       <a class="nav prev" href="index.test_cancellation.cpp.d2e2bde14da2e1cdf2df85316a8b18bb.html"></a>
@@ -1575,6 +1597,126 @@
         <td class="linecount pr-2 pl-2 color-fg-muted text-right"></td>
         <td class="src"></td>
       </tr>
+      <tr>
+        <td class="text-right src linenos"><a class="normal" id="L138" href="#L138">138</a></td>
+        <td class="text-right src linenos ws-unset">
+        </td>
+        <td class="linecount coveredLine show_coveredLine pr-2 pl-2 color-fg-muted text-right">1</td>
+        <td class="src coveredLine show_coveredLine"><span class="n">TEST_CASE</span><span class="p">(</span><span class="s">&quot;co_spawn with group and void task success&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;[spawn]&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span></td>
+      </tr>
+      <tr>
+        <td class="text-right src linenos"><a class="normal" id="L139" href="#L139">139</a></td>
+        <td class="text-right src linenos ws-unset">
+        </td>
+        <td class="linecount coveredLine show_coveredLine pr-2 pl-2 color-fg-muted text-right">1</td>
+        <td class="src coveredLine show_coveredLine"><span class="w">    </span><span class="n">TaskGroup</span><span class="w"> </span><span class="n">group</span><span class="p">;</span></td>
+      </tr>
+      <tr>
+        <td class="text-right src linenos"><a class="normal" id="L140" href="#L140">140</a></td>
+        <td class="text-right src linenos ws-unset">
+        </td>
+        <td class="linecount coveredLine show_coveredLine pr-2 pl-2 color-fg-muted text-right">1</td>
+        <td class="src coveredLine show_coveredLine"><span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">atomic</span><span class="o">&lt;</span><span class="kt">bool</span><span class="o">&gt;</span><span class="w"> </span><span class="n">handler_called</span><span class="p">{</span><span class="nb">false</span><span class="p">};</span></td>
+      </tr>
+      <tr>
+        <td class="text-right src linenos"><a class="normal" id="L141" href="#L141">141</a></td>
+        <td class="text-right src linenos ws-unset">
+        </td>
+        <td class="linecount pr-2 pl-2 color-fg-muted text-right"></td>
+        <td class="src"><span class="w">    </span></td>
+      </tr>
+      <tr>
+        <td class="text-right src linenos"><a class="normal" id="L142" href="#L142">142</a></td>
+        <td class="text-right src linenos ws-unset">
+          <details class="normal details-overlay">
+            <summary>6/12</summary>
+            <div class="text-left position-absolute color-bg-subtle p-3 mt-2" style="z-index: 1;">
+              <div class="style-function-name">CATCH2_INTERNAL_TEST_20():</div>
+              <div class="color-taken-branch">&check; Branch  4 &rightarrow; 5 taken 1 time.</div>
+              <div class="color-taken-branch">&check; Branch  5 &rightarrow; 6 taken 1 time.</div>
+              <div class="style-function-name">CATCH2_INTERNAL_TEST_20()::{lambda()#1}::operator()() const:</div>
+              <div class="color-taken-branch">&check; Branch  3 &rightarrow; 4 taken 1 time.</div>
+              <div class="color-taken-branch">&check; Branch  5 &rightarrow; 6 taken 1 time.</div>
+              <div class="color-fg-danger">&cross; Branch  7 &rightarrow; 8 not taken.</div>
+              <div class="color-taken-branch">&check; Branch  7 &rightarrow; 9 taken 1 time.</div>
+              <div class="color-fg-danger">&cross; Branch  9 &rightarrow; 10 not taken.</div>
+              <div class="color-taken-branch">&check; Branch  9 &rightarrow; 11 taken 1 time.</div>
+              <div class="color-fg-danger">&cross; Branch  16 &rightarrow; 17 not taken.</div>
+              <div class="color-fg-danger">&cross; Branch  16 &rightarrow; 18 not taken.</div>
+              <div class="color-fg-danger">&cross; Branch  19 &rightarrow; 20 not taken.</div>
+              <div class="color-fg-danger">&cross; Branch  19 &rightarrow; 21 not taken.</div>
+            </div>
+          </details>
+        </td>
+        <td class="linecount partialCoveredLine show_partialCoveredLine pr-2 pl-2 color-fg-muted text-right">3</td>
+        <td class="src partialCoveredLine show_partialCoveredLine"><span class="w">    </span><span class="n">co_spawn</span><span class="p">(</span><span class="n">group</span><span class="p">,</span><span class="w"> </span><span class="p">[]()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Task</span><span class="o">&lt;</span><span class="kt">void</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">co_return</span><span class="p">;</span><span class="w"> </span><span class="p">}(),</span><span class="w"> </span><span class="p">[</span><span class="o">&amp;</span><span class="p">](</span><span class="n">std</span><span class="o">::</span><span class="n">exception_ptr</span><span class="p">)</span><span class="w"> </span><span class="p">{</span></td>
+      </tr>
+      <tr>
+        <td class="text-right src linenos"><a class="normal" id="L143" href="#L143">143</a></td>
+        <td class="text-right src linenos ws-unset">
+        </td>
+        <td class="linecount uncoveredLine show_uncoveredLine pr-2 pl-2 color-fg-muted text-right">&cross;</td>
+        <td class="src uncoveredLine show_uncoveredLine"><span class="w">        </span><span class="n">handler_called</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span></td>
+      </tr>
+      <tr>
+        <td class="text-right src linenos"><a class="normal" id="L144" href="#L144">144</a></td>
+        <td class="text-right src linenos ws-unset">
+        </td>
+        <td class="linecount uncoveredLine show_uncoveredLine pr-2 pl-2 color-fg-muted text-right">&cross;</td>
+        <td class="src uncoveredLine show_uncoveredLine"><span class="w">    </span><span class="p">});</span></td>
+      </tr>
+      <tr>
+        <td class="text-right src linenos"><a class="normal" id="L145" href="#L145">145</a></td>
+        <td class="text-right src linenos ws-unset">
+        </td>
+        <td class="linecount pr-2 pl-2 color-fg-muted text-right"></td>
+        <td class="src"><span class="w">    </span></td>
+      </tr>
+      <tr>
+        <td class="text-right src linenos"><a class="normal" id="L146" href="#L146">146</a></td>
+        <td class="text-right src linenos ws-unset">
+          <details class="normal details-overlay">
+            <summary>1/1</summary>
+            <div class="text-left position-absolute color-bg-subtle p-3 mt-2" style="z-index: 1;">
+              <div class="color-taken-branch">&check; Branch  8 &rightarrow; 9 taken 1 time.</div>
+            </div>
+          </details>
+        </td>
+        <td class="linecount coveredLine show_coveredLine pr-2 pl-2 color-fg-muted text-right">1</td>
+        <td class="src coveredLine show_coveredLine"><span class="w">    </span><span class="n">group</span><span class="p">.</span><span class="n">wait</span><span class="p">();</span></td>
+      </tr>
+      <tr>
+        <td class="text-right src linenos"><a class="normal" id="L147" href="#L147">147</a></td>
+        <td class="text-right src linenos ws-unset">
+          <details class="normal details-overlay">
+            <summary>4/6</summary>
+            <div class="text-left position-absolute color-bg-subtle p-3 mt-2" style="z-index: 1;">
+              <div class="color-taken-branch">&check; Branch  13 &rightarrow; 14 taken 1 time.</div>
+              <div class="color-taken-branch">&check; Branch  14 &rightarrow; 15 taken 1 time.</div>
+              <div class="color-taken-branch">&check; Branch  15 &rightarrow; 16 taken 1 time.</div>
+              <div class="color-taken-branch">&check; Branch  17 &rightarrow; 18 taken 1 time.</div>
+              <div class="color-fg-danger">&cross; Branch  35 &rightarrow; 36 not taken.</div>
+              <div class="color-fg-danger">&cross; Branch  36 &rightarrow; 17 not taken.</div>
+            </div>
+          </details>
+        </td>
+        <td class="linecount partialCoveredLine show_partialCoveredLine pr-2 pl-2 color-fg-muted text-right">1</td>
+        <td class="src partialCoveredLine show_partialCoveredLine"><span class="w">    </span><span class="n">REQUIRE_FALSE</span><span class="p">(</span><span class="n">handler_called</span><span class="p">);</span></td>
+      </tr>
+      <tr>
+        <td class="text-right src linenos"><a class="normal" id="L148" href="#L148">148</a></td>
+        <td class="text-right src linenos ws-unset">
+        </td>
+        <td class="linecount coveredLine show_coveredLine pr-2 pl-2 color-fg-muted text-right">1</td>
+        <td class="src coveredLine show_coveredLine"><span class="p">}</span></td>
+      </tr>
+      <tr>
+        <td class="text-right src linenos"><a class="normal" id="L149" href="#L149">149</a></td>
+        <td class="text-right src linenos ws-unset">
+        </td>
+        <td class="linecount pr-2 pl-2 color-fg-muted text-right"></td>
+        <td class="src"></td>
+      </tr>
     </table>
   </div>
 </div>
@@ -1582,7 +1724,7 @@
         <hr class="block-separator"/>
         <footer class="text-center">
           Created using <a href="http://gcovr.com/en/8.7">GCOVR (Version 8.7)</a>
-          at 2026-11-22 14:13:16+00:00
+          at 2026-11-22 15:23:22+00:00
         </footer>
       </div>
     </div>
