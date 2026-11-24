@@ -17,6 +17,8 @@ aw_project_setup(PREFIX AW_TPL BUILD_TESTS BUILD_EXAMPLES INSTALL)
 find_package(Threads REQUIRED)
 aw_check_cxx23_runtime()
 
+include(DependencyCache)
+
 set(AW_TPL_SOURCES
     src/operation_canceled_exception.cpp
     src/timeout_exception.cpp
