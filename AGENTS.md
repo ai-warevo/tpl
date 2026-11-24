@@ -59,7 +59,7 @@ Namespaces map 1:1 to directories, mirroring .NET:
 - **Granularity:** roughly one public entity per header (`thread_pool.hpp`, `cancellation_token.hpp`, `when_any.hpp`, …); file names are `snake_case` of the type name. `tpl.hpp` is the umbrella header — add new public headers there.
 - **All internal helpers, state, promises, awaiters and scheduling glue live in `detail/`** (`aw::tpl::...::detail`). Nothing in `detail/` is public API; never expose it in a public signature beyond what templates unavoidably need.
 - **`.hpp`/`.cpp` separation:** non-template code is declared in the header and defined in the mirrored path under `src/` (`include/aw/tpl/x/y.hpp` → `src/x/y.cpp`). Only templates, concepts and trivial one-line inline accessors stay in headers.
-- Headers start with `#pragma once`; a `.cpp` includes its own header first. Include groups: own header, then `<aw/tpl/...>`, then `<std>` headers, blank line between groups (in tests: Catch2 first).
+- Headers use standard include guards in `UPPER_SNAKE_CASE` derived from the file path (`#ifndef AW_TPL_THREADING_CANCELLATION_TOKEN_HPP` / `#define AW_TPL_THREADING_CANCELLATION_TOKEN_HPP` / `#endif  // AW_TPL_THREADING_CANCELLATION_TOKEN_HPP`); a `.cpp` includes its own header first. Include groups: own header, then `<aw/tpl/...>`, then `<std>` headers, blank line between groups (in tests: Catch2 first).
 - Keep files small and single-purpose; split rather than grow. Dependencies flow `tasks` → `threading` → `aw::tpl` root (never the reverse), and `detail` never depends on public convenience headers.
 
 ## Documentation & comments

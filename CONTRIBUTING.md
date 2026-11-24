@@ -28,7 +28,7 @@ Thank you for your interest in contributing to **aw::tpl** — the C++23 library
 - **C++23 idiomatic style**: concepts/requires over SFINAE, coroutines, `std::jthread`, RAII everywhere
 - **Naming conventions**: types `PascalCase`, functions/variables `snake_case`, private members `trailing_underscore_`
 - **Formatting**: 4 spaces, 120 cols, attached braces (see `.clang-format`, `.editorconfig`)
-- **Headers**: `#pragma once`, include groups (own header → `<aw/tpl/...>` → `<std>`), blank line between groups
+- **Headers**: standard include guards in `UPPER_SNAKE_CASE` (`#ifndef AW_TPL_...` / `#define AW_TPL_...` / `#endif  // AW_TPL_...`); include groups (own header → `<aw/tpl/...>` → `<std>`), blank line between groups
 
 ### Architecture Rules
 
