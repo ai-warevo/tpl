@@ -12,10 +12,15 @@ namespace aw::tpl::threading::tasks {
  */
 class TaskAlreadyMovedException : public std::exception {
 public:
-    /// Creates the exception with a message explaining that the move-only result is gone.
+    /**
+     * @brief Creates the exception indicating the move-only result was already taken.
+     */
     TaskAlreadyMovedException();
 
-    /// Returns the exception message.
+    /**
+     * @brief Returns the exception message.
+     * @return Null-terminated C-string containing the exception message.
+     */
     [[nodiscard]] const char* what() const noexcept override;
 
     /**

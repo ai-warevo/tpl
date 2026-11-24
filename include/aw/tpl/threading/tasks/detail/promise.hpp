@@ -17,10 +17,20 @@ template <typename T>
 struct Promise : PromiseBase<T> {
     static_assert(!std::is_reference_v<T>, "Task<T&> is not supported; return a value or a pointer instead.");
 
-    /// Creates the @c Task handle sharing this promise's state.
+    /**
+     * @brief Creates the @c Task<T> handle sharing this promise's state.
+     * @return A new @c Task holding a reference to this promise's shared state.
+     */
     Task<T> get_return_object() noexcept;
 
-    /// Stores the coroutine's result in the shared state.
+    /**
+     * @brief Stores the coroutine's result in the shared state.
+     * 
+     * Called by the compiler when a coroutine reaches a @c co_return statement.
+     * Thread-safe; guarded by the state's internal mutex.
+     * 
+     * @param[in] v Result value; moved into the shared state.
+     */
     void return_value(T v) { this->state->value.emplace(std::move(v)); }
 };
 

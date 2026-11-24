@@ -41,7 +41,6 @@ Task<std::unique_ptr<int>> make_unique_result() {
 }
 
 Task<int> chain() {
-    // co_await inside a coroutine never blocks a pool thread.
     int a = co_await square(3);
     int b = co_await square(4);
     co_return a + b;
@@ -61,7 +60,6 @@ std::string to_printable(T const& v) {
 }
 
 int main() {
-    // Tasks start eagerly on the thread pool; result() blocks the (non-pool) calling thread.
     Task<int> t = square(7);
     std::print("square(7) = {}\n", t.result());
 
@@ -100,13 +98,11 @@ int main() {
         std::print("empty task: {}\n", ex.what());
     }
 
-    // std::ranges::for_each: print all results in one pass.
     std::vector<int> vals = {7, 49, 121};
     std::print("std::for_each:");
     std::ranges::for_each(vals, [](int v) { std::print(" {}", v); });
     std::print("\n");
 
-    // if constexpr helper: works with both atomic and plain types.
     std::atomic<int> atomic_val{42};
     int plain_val{99};
     std::print("atomic via to_printable: {}\n", to_printable(atomic_val));

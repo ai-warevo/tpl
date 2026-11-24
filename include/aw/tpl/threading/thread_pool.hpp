@@ -64,7 +64,13 @@ public:
     [[nodiscard]] std::size_t thread_count() const noexcept;
 
 private:
-    /// Tag selecting the constructor that only initializes members and starts no thread.
+    /**
+     * @struct NoThreads
+     * @brief Tag struct selecting the constructor that initializes members without spawning threads.
+     * 
+     * Used internally by the global pool initialization to defer thread creation until
+     * after all static initialization is complete, avoiding static initialization order issues.
+     */
     struct NoThreads {};
 
     explicit ThreadPool(NoThreads) noexcept;
@@ -73,16 +79,44 @@ private:
     friend void detail::schedule_after_on_pool(ThreadPool* pool, std::coroutine_handle<> h,
                                                std::chrono::milliseconds delay);
 
-    /// Enqueues a coroutine handle to be resumed on one of the worker threads.
+    /**
+     * @brief Enqueues a coroutine handle to be resumed on one of the worker threads.
+     * 
+     * The handle is added to the work queue and workers are notified via condition variable.
+     * 
+     * @param[in] h Coroutine handle to enqueue; must be valid.
+     */
     void schedule(std::coroutine_handle<> h);
 
-    /// Schedules a coroutine to resume after the specified duration without blocking workers.
+    /**
+     * @brief Schedules a coroutine to resume after the specified duration without blocking workers.
+     * 
+     * Enqueues the handle in the timer queue; the timer thread processes it and moves
+     * it to the worker queue once the delay expires.
+     * 
+     * @param[in] h Coroutine handle to schedule.
+     * @param[in] duration Time to wait before enqueueing to workers.
+     */
     void schedule_after(std::coroutine_handle<> h, std::chrono::milliseconds duration);
 
-    /// Main execution loop for worker threads.
+    /**
+     * @brief Main execution loop for worker threads.
+     * 
+     * Waits on the work queue condition variable and resumes dequeued coroutines.
+     * Runs until the stop token is signaled (during shutdown).
+     * 
+     * @param[in] st Stop token used to signal shutdown.
+     */
     void worker_loop(std::stop_token st);
 
-    /// Dedicated loop managing pending timers and dispatching expired coroutines to workers.
+    /**
+     * @brief Dedicated loop managing pending timers and dispatching expired coroutines to workers.
+     * 
+     * Maintains a priority queue of timer entries and periodically checks for expiration,
+     * moving ready coroutines to the worker queue. Runs on a separate thread until stopped.
+     * 
+     * @param[in] st Stop token used to signal shutdown.
+     */
     void timer_loop(std::stop_token st);
 
     /**

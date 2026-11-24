@@ -19,7 +19,8 @@ struct WhenAllSettled {
     std::exception_ptr exception;
 };
 
-// A settled outcome is only copyable if its payload is (the optional's copy constructor lies for containers).
+/* A settled outcome is only copyable if its payload is (the optional's copy
+   constructor lies for containers), so we specialize is_truly_copyable. */
 template <typename T>
 struct is_truly_copyable<WhenAllSettled<T>> : std::bool_constant<is_truly_copyable<WhenAllElementT<T>>::value> {};
 

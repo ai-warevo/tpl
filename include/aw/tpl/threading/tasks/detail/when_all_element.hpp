@@ -5,7 +5,15 @@
 
 namespace aw::tpl::threading::tasks::detail {
 
-/// Element type stored per child by @c when_all: the result type, with @c void mapped to @c std::monostate.
+/**
+ * @brief Element type stored per child task by @c when_all.
+ * 
+ * Maps each child result type @c T directly (e.g. @c int → @c int),
+ * with the special case that @c void children are stored as @c std::monostate
+ * to allow uniform tuple-like access to all results.
+ * 
+ * @tparam T The child task's result type.
+ */
 template <typename T>
 struct WhenAllElement {
     using type = T;

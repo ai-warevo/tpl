@@ -23,7 +23,14 @@ namespace aw::tpl::threading::detail {
  */
 class CurrentPoolScope {
 public:
-    /// Makes @p pool the calling thread's current pool until the scope ends.
+    /**
+     * @brief Makes the given pool the calling thread's current pool until the scope ends.
+     * 
+     * On scope destruction, the previous pool association is restored. Useful for
+     * simulating the execution context of worker threads in tests and debugging.
+     * 
+     * @param[in] pool The @c ThreadPool to become current, or @c nullptr to detach.
+     */
     explicit CurrentPoolScope(ThreadPool* pool) noexcept;
     ~CurrentPoolScope() noexcept;
 

@@ -65,7 +65,7 @@ Namespaces map 1:1 to directories, mirroring .NET:
 ## Documentation & comments
 
 - **Every public class, function, concept, constructor and exception type gets a Doxygen `/** ... */` block** using the existing tags: `@class`/`@struct`, `@brief`, `@tparam`, `@param[in]`, `@return`, `@throws`, and `@c` for code. State the .NET equivalent and the thread-safety/lifetime guarantees where relevant. Brief `/** */` on `detail/` types is encouraged too.
-- Inline `//` comments are **minimal**: use them only for non-obvious logic, subtle concurrency/lifetime/ordering reasons, or the *why* behind a choice (e.g. "threads are declared last so they are joined first"). Never narrate what the code obviously does (`// increment counter`, `// print to console`). Prefer better names over comments. Use `///` only for one-line member docs as in `thread_pool.hpp`.
+- **C++ Comments Rule:** Explain **why**, not **what**. Delete redundant comments that narrate code (e.g., `// increment counter`, `// null check`). Keep only comments that clarify intent, edge cases, workarounds, concurrency invariants, or architectural constraints. Prefer `/* ... */` or `/** ... */` Doxygen blocks over `//` inline comments except for ultra-short tool directives (`// NOLINT`, `// clang-format`). Never use `///` for one-liners on member variables or private methods; use `/** */` Doxygen blocks instead.
 - Keep README tables/examples in sync when public behaviour changes.
 
 ## C++23 conventions & style

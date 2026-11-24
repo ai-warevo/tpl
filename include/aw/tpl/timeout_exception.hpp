@@ -14,7 +14,9 @@ namespace aw::tpl {
  */
 class TimeoutException : public std::exception {
 public:
-    /// Creates the exception with the .NET default message ("The operation timed out.").
+    /**
+     * @brief Creates the exception with the .NET default message ("The operation timed out.").
+     */
     TimeoutException();
 
     /**
@@ -30,7 +32,10 @@ public:
      */
     TimeoutException(std::string message, std::string reason);
 
-    /// Returns the exception message.
+    /**
+     * @brief Returns the exception message.
+     * @return Null-terminated C-string containing the exception message.
+     */
     [[nodiscard]] const char* what() const noexcept override;
 
     /**

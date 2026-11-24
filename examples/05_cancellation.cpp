@@ -12,14 +12,14 @@ using namespace aw::tpl::threading;
 using namespace aw::tpl::threading::tasks;
 
 Task<int> long_operation(CancellationToken token) {
-    co_await async_sleep(5000ms, token); // throws OperationCanceledException when canceled
+    co_await async_sleep(5000ms, token);
     co_return 1;
 }
 
 Task<int> polling_loop(CancellationToken token) {
     int iterations = 0;
     while (true) {
-        token.throw_if_cancellation_requested(); // manual cooperative check
+        token.throw_if_cancellation_requested();
         co_await async_sleep(10ms);
         ++iterations;
         if (iterations == 1000) co_return iterations;
@@ -76,9 +76,9 @@ int main() {
         (void)token.unregister_callback(id2);
 
         cts.cancel();
-        cts.cancel(); // idempotent
+        cts.cancel();
         (void)id1;
-        token.register_callback([&] { calls += 10; }); // already canceled: runs right away
+        token.register_callback([&] { calls += 10; });
         std::print("   callback total = {} (1 + 10)\n", calls.load());
     }
 

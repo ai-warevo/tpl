@@ -28,7 +28,11 @@ struct Detached {
         void unhandled_exception() noexcept { std::terminate(); } // LCOV_EXCL_LINE
     };
 
-    /// Runs the coroutine until its first suspension. Must be called exactly once.
+    /**
+     * @brief Runs the coroutine until its first suspension point.
+     * @pre Called exactly once per @c Detached instance.
+     * @warning Precondition violation results in double-resume and undefined behavior.
+     */
     void start() const { handle.resume(); }
 
     std::coroutine_handle<> handle;

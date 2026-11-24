@@ -16,7 +16,7 @@ using namespace aw::tpl::threading;
 using namespace aw::tpl::threading::tasks;
 
 Task<std::string> fetch_from_server(std::string name, std::chrono::milliseconds latency, CancellationToken token) {
-    co_await async_sleep(latency, token); // throws OperationCanceledException when canceled
+    co_await async_sleep(latency, token);
     co_return "response from " + name;
 }
 
@@ -52,18 +52,15 @@ Task<void> app() {
         Task<std::string> task1 = fetch_from_server("A", 800ms, cts.token());
         Task<std::string> task2 = fetch_from_server("B", 50ms, cts.token());
 
-        // Wait for the first task to finish.
         Task<std::string> completed_task = co_await when_any(task1, task2);
 
-        // Cancel the remaining task to save resources.
         cts.cancel();
 
-        // Unwrap the result (or throw if the winning task failed).
         std::string result = co_await completed_task;
         std::print("1. {}{} (task{} won)\n", result, bool_str(completed_task == task2), completed_task == task2 ? 2 : 1);
 
         try {
-            (void)co_await task1; // the loser was canceled
+            (void)co_await task1;
         } catch (const OperationCanceledException&) {
             std::print("   task1 was canceled\n");
         }
@@ -89,8 +86,8 @@ Task<void> app() {
 
         Task<void> winner = co_await when_any(slow, quick, text);
         std::print("3. winner is `quick`? {}\n", bool_str(winner == quick));
-        co_await winner;                      // observe completion / rethrow failure
-        (void)co_await when_all(slow, text);  // the losers keep running; wait for them if you care
+        co_await winner;
+        (void)co_await when_all(slow, text);
     }
 
     // 4. A failed task also counts as completed; the failure appears on the second await.
@@ -99,13 +96,13 @@ Task<void> app() {
             number(1, 200ms),
             failing(10ms),
         };
-        Task<int> completed = co_await when_any(with_failure); // does not throw
+        Task<int> completed = co_await when_any(with_failure);
         try {
-            (void)co_await completed; // throws here
+            (void)co_await completed;
         } catch (const std::runtime_error& ex) {
             std::print("4. winner failed with: {}\n", ex.what());
         }
-        co_await nothing(200ms); // let the slow loser finish before leaving the scope
+        co_await nothing(200ms);
     }
 
     // 5. An empty vector is an error.

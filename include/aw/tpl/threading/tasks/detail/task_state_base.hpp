@@ -31,12 +31,25 @@ struct TaskStateBase {
      */
     std::atomic<bool> ready{false};
     std::vector<std::coroutine_handle<>> continuations;
-    /// Fire-and-forget callbacks invoked once on completion; used by when_any optimization.
+    /**
+     * @brief Fire-and-forget callbacks invoked on completion.
+     * 
+     * Used by @c when_any optimization to signal watcher tasks without storing
+     * the full result. Executed under lock; all callbacks run regardless of exceptions,
+     * with the first exception rethrown by the caller.
+     */
     std::vector<aw::tpl::threading::detail::CallbackFunction<void()>> completion_callbacks;
     std::exception_ptr exception = nullptr;
     std::binary_semaphore done_sem{0};
 
-    /// Coroutine frame owned by this state once the coroutine reached its final suspend point.
+    /**
+     * @brief Coroutine frame owned by this state once the coroutine reached its final suspend point.
+     * 
+     * Null until the coroutine's @c final_suspend reaches its ramp function.
+     * Destroyed (and all by-value parameters destroyed with it) when the last
+     * @c Task or awaiter reference drops, ensuring the creating thread is no longer
+     * in the ramp function when destruction occurs.
+     */
     std::coroutine_handle<> frame = nullptr;
 
     TaskStateBase() = default;

@@ -38,7 +38,7 @@ int main() {
         }
     });
 
-    group.wait(); // blocking drain on a non-pool thread; use `co_await group.wait_async()` in coroutines
+    group.wait();
     std::print("completed: {}\n", counter.load());
     return 0;
 }
